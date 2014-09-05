@@ -10,11 +10,19 @@
 			 			<field name="internal_move_type"/>
 			 	</field>
 			 	<xpath expr="/form/sheet/notebook/page[@string='Additional Info']" position="after">	 		
-		    		<page string="Confirmation">
+		    		<page string="Picking Confirmation">
 		 	  			<group> 
 		  					<field name="date_confirmed" required="1"/> 
 							<field name="person_name" required="1"/> 
 							<field name="file_confirmed" required="1"/> 
+		  				</group> 
+		  			</page>
+		  			<page string="Delivery Confirmation">
+		 	  			<group> 
+		  					<field name="date_confirmed_ex" required="1"/> 
+							<field name="person_name_ex" required="1"/> 
+							<field name="file_confirmed_ex" required="1"/>
+							<field name="notes_ex" required="1"/>
 		  				</group> 
 		  			</page>
 				</xpath>		 	 	   	 
@@ -54,7 +62,7 @@
 			 <field name="inherit_id" ref="stock.view_picking_form"/>
 			 <field name="arch" type="xml">
 			 	<xpath expr="/form/sheet/notebook/page[@string='Additional Info']" position="after">
-		    		<page string="Confirmation">
+		    		<page string="Shipment Confirmation">
 		 	  			<group> 
 		  					<field name="date_confirmed" required="1"/> 
 							<field name="person_name" required="1"/> 
@@ -65,6 +73,9 @@
 				<xpath expr="/form/sheet/group/group[1]/field[@name='stock_journal_id']" position="after">
 		    		<field name="additional_cost" required="1"/>
 		    	</xpath>            
+		    	<xpath expr="/form/sheet/notebook/page/group/group/field[@name='move_type']" position="replace">	 		
+		    		<field name="move_type" readonly="1"/>
+				</xpath>
 				<xpath expr="/form/sheet/notebook/page[@string='Additional Info']" position="after">
 		        	<page string="Cost Component" attrs="{'invisible':[('additional_cost', '=', 'no')]}">
 		        		<separator string="Bank/ Cash"/>
@@ -91,11 +102,14 @@
 		<record id="view_picking_out_form_dsp" model="ir.ui.view">
 			 <field name="name">stock.picking.out.form.dsp</field>
 			 <field name="model">stock.picking.out</field>
-			 <field name="inherit_id" ref="stock.view_picking_out_form"/>
+			 <field name="inherit_id" ref="stock.view_picking_form"/>
 			 <field name="arch" type="xml">
-			  <xpath expr="//field[@name='partner_id']" position="replace">
-			   <field name="partner_id" on_change="onchange_partner_in(partner_id)" string="Outlet/Customer" domain="[('customer','=',True)]" />
-			  </xpath>
+			 	<xpath expr="/form/sheet/notebook/page/group/group/field[@name='move_type']" position="replace">	 		
+		    		<field name="move_type" readonly="1"/>
+				</xpath>
+			  	<xpath expr="//field[@name='partner_id']" position="replace">
+			   		<field name="partner_id" on_change="onchange_partner_in(partner_id)" string="Outlet/Customer" domain="[('customer','=',True)]" />
+			  	</xpath>			  	
 			 </field>
 		</record>
 	
@@ -105,14 +119,14 @@
 			 <field name="inherit_id" ref="stock.view_picking_form"/>
 			 <field name="arch" type="xml">
 			 	<xpath expr="/form/sheet/notebook/page[@string='Additional Info']" position="after">    		
-		  			<page string="Confirmation">
+		  			<page string="Picking Confirmation">
 		 	  			<group> 
 		  					<field name="date_confirmed" required="1"/> 
 							<field name="person_name" required="1"/> 
 							<field name="file_confirmed" required="1"/> 
 		  				</group> 
 		  			</page> 	  		
-		  			<page string="Confirmation External">
+		  			<page string="Delivery Confirmation">
 		 	  			<group> 
 		  					<field name="date_confirmed_ex" /> 
 							<field name="person_name_ex" /> 
@@ -131,9 +145,9 @@
 			 <field name="arch" type="xml">
 			 	<field name="partner_id" string="Customer" position="replace">
 			 		<field name="partner_id" string="Outlet/Customer"/>
-			 	</field>
-			 	<field name="backorder_id" position="replace">
-			 		<field name="backorder_id" invisible="1"/>
+			 	</field>			 				 	
+			 	<field name="stock_journal_id" position="replace">
+			 		<field name="stock_journal_id" invisible="1"/>                    
 			 	</field>
 			 </field>
 		</record> 
@@ -143,8 +157,11 @@
 			 <field name="model">stock.picking.in</field>
 			 <field name="inherit_id" ref="stock.view_picking_in_tree"/>
 			 <field name="arch" type="xml">	 	
-			 	<field name="backorder_id" position="replace">
-			 		<field name="backorder_id" invisible="1"/>
+			 	<field name="backorder_id" position="attributes">
+			 		<attribute name="invisible">True</attribute>
+			 	</field>
+			 	<field name="stock_journal_id" position="attributes">
+			 		<attribute name="invisible">True</attribute>
 			 	</field>
 			 </field>
 		</record> 
@@ -154,8 +171,14 @@
 			 <field name="model">stock.picking</field>
 			 <field name="inherit_id" ref="stock.vpicktree"/>
 			 <field name="arch" type="xml">	 	
-			 	<field name="backorder_id" position="replace">
-			 		<field name="backorder_id" invisible="1"/>
+			 	<field name="backorder_id" position="attributes">
+			 		<attribute name="invisible">True</attribute>
+			 	</field>
+			 	<field name="stock_journal_id" position="attributes">
+			 		<attribute name="invisible">True</attribute>
+			 	</field>
+			 	<field name="invoice_state" position="attributes">
+			 		<attribute name="invisible">True</attribute>
 			 	</field>
 			 </field>
 		</record> 
@@ -171,15 +194,16 @@
 			 </field>
 			</record>
 			
-			<record id="view_move_picking_tree_dsp" model="ir.ui.view">
-			 <field name="name">move.picking.tree.dsp</field>
-			 <field name="model">stock.move</field>
-			 <field name="inherit_id" ref="stock.view_move_picking_tree"/>
-			 <field name="arch" type="xml">
-			 	<field name="product_qty" position="after">
-			 		<field name="price_unit"/>
-			 	</field>   	  
-			 </field>
+		<record id="view_move_picking_tree_dsp" model="ir.ui.view">
+		 <field name="name">move.picking.tree.dsp</field>
+		 <field name="model">stock.move</field>
+		 <field name="inherit_id" ref="stock.view_move_picking_tree"/>
+		 <field name="arch" type="xml">
+		 	<field name="product_qty" position="after">
+		 		<field name="price_unit"/>
+		 	</field>   	  
+		 </field>
 		</record>
+				
 	</data>
 </openerp>

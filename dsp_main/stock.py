@@ -26,6 +26,10 @@ class stock_picking(osv.osv):
             'file_confirmed'        : fields.binary('Input File'),
             'additional_cost_int'   : fields.selection([('no','Without Cost Component'), ('yes','With Cost Component')], 'Cost Component', readonly=False),
             'internal_move_type'    : fields.selection([('regular','Regular'), ('consignment','Consignment')], 'Move Type'),
+            'person_name_ex'        : fields.char('Person Name', size=128),
+            'date_confirmed_ex'     : fields.date('Input Date'),
+            'file_confirmed_ex'     : fields.binary('Input File'),
+            'notes_ex'              : fields.text('Notes'),
                 }
         
     # FIXME: needs refactoring, this code is partially duplicated in stock_move.do_partial()!
@@ -393,6 +397,10 @@ class stock_picking_out(osv.osv):
             'file_confirmed_ex'     : fields.binary('Input File'),
             'notes_ex'              : fields.text('Notes'),
                 }
+    
+    _defaults = {            
+            'move_type'             : 'one',
+                 }
 
 stock_picking_out()                
     
@@ -407,11 +415,12 @@ class stock_picking_in(osv.osv):
             'additional_cost'       : fields.selection([('no', 'Non Cost Component'), ('yes', 'With Cost Component')], 'Cost Component', readonly=False),
             'person_name'           : fields.char('Person Name', size=128),
             'date_confirmed'        : fields.date('Input Date'),
-            'file_confirmed'        : fields.binary('Input File'),
+            'file_confirmed'        : fields.binary('Input File'),            
                 }
     
     _defaults = {
             'additional_cost' : 'no',
+            'move_type'       : 'one',
                  }
 
 stock_picking_in()
