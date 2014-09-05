@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="utf-8"?>
+<openerp>
+    <data>
+	    <record id="product_normal_form_view_inherit" model="ir.ui.view">
+			<field name="name">product.normal.form.inherit</field>
+			<field name="model">product.product</field>
+			<field name="inherit_id" ref="product.product_normal_form_view"/>
+			<field name="arch" type="xml">
+				<page string="Information" position="after">
+					<page string="Wine Description">
+						<group>
+							<group>
+								<field name="country_id"/>
+								<field name="region_id"/>
+							</group>
+							<group>
+								<field name="type_id"/>
+								<field name="appelation_id"/>
+							</group>				
+							<group>
+								<field name="vintages" string="Vintage"/>	
+								<field name="classification"/>
+								<field name="grape_id"/>
+							</group>
+							<group>
+								<field name="volume_l"/>
+								<field name="volume_alcohol"/>
+							</group>										
+						</group>
+					</page>
+				</page>
+				<field name="description" position="before">
+	
+				</field>
+				<xpath expr="/form/sheet/notebook/page[@string='Sales']" position="after">
+	                <page string="Price List" groups="base.group_erp_manager">
+	                	<group>
+	                		<group>
+		                		<field name="base_cost" readonly="1"/>		                		
+		                		<field name="jkt_cost" readonly="1"/>
+		                	</group>
+		                	<group>
+		                		<label for="margin"/>
+			                	<div>
+				                    <field name="margin" class="oe_inline"/> percent
+			                	</div>			                
+		                		<field name="suggest_price"/>
+		                		<field name="real_price"/>		                				                	
+		                	</group>
+	                	</group>               
+	                </page>
+	            </xpath>
+			</field>			
+		</record>		
+	    
+	    <record model="ir.ui.view" id="product.product_kanban_view_inherit">
+	        <field name="name">Product Kanban Inherit</field>
+	        <field name="model">product.product</field>
+	        <field name="inherit_id" ref="product.product_kanban_view"/>
+	        <field name="arch" type="xml">	        	                   
+	            <div class="oe_kanban_vignette oe_semantic_html_override" position="replace">
+            		<div class="oe_kanban_vignette oe_semantic_html_override">
+                    	<a type="open"><img t-att-src="kanban_image('product.product', 'image_small', record.id.value)" class="oe_kanban_image"/></a>
+                    	<div class="oe_kanban_details">
+	                        <h4>
+                            	<a type="open">
+                                 	<t t-if="record.code.raw_value">[<field name="code"/>]</t> <field name="name"/>
+                            	</a>
+                        	</h4>
+                        	<div name="tags"/>
+                        	<ul>
+	                            <field name="lst_price" invisible="1"/>
+                        	</ul>
+                    	</div>
+                    </div>
+                </div>       	                	
+                <field name="name" position="after">
+	            	<t t-if="record.vintages.raw_value"> - <field name="vintages"/></t> 
+	            </field>	                            
+				<ul position="inside">                    
+                    <li t-if="record.type.raw_value != 'service'">SG Cost: <field name="base_cost"/></li>
+                    <li t-if="record.type.raw_value != 'service'">JKT Cost: <field name="jkt_cost"/></li>
+                    <li t-if="record.type.raw_value != 'service'">Suggest Price: <field name="suggest_price"/></li>
+                    <li t-if="record.type.raw_value != 'service'">Real Price: <field name="real_price"/></li>
+                </ul>            	   
+	        </field>
+	    </record>
+    
+		<record id="product_product_tree_pricelist_view" model="ir.ui.view">
+            <field name="name">product.product.tree.pricelist</field>
+            <field name="model">product.product</field>
+            <field name="inherit_id" ref="product.product_product_tree_view"/>
+            <field name="arch" type="xml">
+                <field name="standard_price" position="after">                	
+                	<field name="base_cost"/>
+                	<field name="jkt_cost"/>
+                	<field name="margin"/>
+                	<field name="suggest_price"/>
+                	<field name="real_price"/>               
+                </field>         
+                <field name="standard_price" position="replace">
+                	<field name="standard_price" invisible='1'/>                	              
+                </field>
+                <field name="lst_price" position="replace">
+                	<field name="lst_price" invisible='1'/>                	              
+                </field>
+                <field name="name" position="after">
+	        		<field name="vintages" />
+	        	</field>
+            </field>
+       	</record>
+		
+		<record id="view_product_standard_price_form_dsp" model="ir.ui.view">
+            <field name="name">product.product.standard.price.form.inherit.dsp</field>
+            <field name="model">product.product</field>
+            <field name="inherit_id" ref="stock.view_product_standard_price_form"/>
+            <field name="arch" type="xml">                        
+            	<xpath expr="/form/sheet/notebook/page[@string='Information']/group/group[1]/field[@name='list_price']" position="attributes">
+            		<attribute name="invisible">True</attribute>           	
+            	</xpath>            	            	                        	                	      
+            </field>
+        </record>			       
+    </data>
+</openerp>

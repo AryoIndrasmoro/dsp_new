@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<openerp>
+    <data>
+
+	<menuitem id="account.menu_finance_receivables" name="Outlets/Customers" parent="account.menu_finance" sequence="2"/>
+
+<!--     <record id="action_sale_analysis" model="ir.actions.act_window">
+        <field name="name">Sale Analysis</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">sale.report</field>
+        <field name="view_type">tree</field>
+        <field name="help">Display and manage the list of all port that can be assigned to your partner records. You can create or delete countries to make sure the ones you are working on will be maintained.</field>
+    </record>    
+	
+    <menuitem id="menu_sale_analysis" name="Saleanalysis" parent="account.menu_finance_legal_statement" sequence="1"/>
+    <menuitem id="menu_action_sale_analysis" parent="account.menu_sale_analysis" sequence="0" action="action_sale_analysis"/>
+ -->
+	</data>
+</openerp>

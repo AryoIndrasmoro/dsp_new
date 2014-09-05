@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="utf-8"?>
+<openerp>
+    <data>
+	<record id="account.action_invoice_tree1" model="ir.actions.act_window">
+	    <field name="name">Outlet/Customer Invoices</field>
+	    <field name="type">ir.actions.act_window</field>
+	    <field name="res_model">account.invoice</field>
+	    <field name="view_type">form</field>
+	    <field name="view_mode">tree,form,calendar,graph</field>
+	    <field eval="False" name="view_id"/>
+	    <field name="domain">[('type','=','out_invoice')]</field>
+	    <field name="context">{'default_type':'out_invoice', 'type':'out_invoice', 'journal_type': 'sale'}</field>
+	    <field name="search_view_id" ref="account.view_account_invoice_filter"/>
+	    <field name="help" type="html">
+	      <p class="oe_view_nocontent_create">
+	        Click to create a outlet/customer invoice.
+	      </p><p>
+	        OpenERP's electronic invoicing allows to ease and fasten the
+	        collection of customer payments. Your customer receives the
+	        invoice by email and he can pay online and/or import it
+	        in his own system.
+	      </p><p>
+	        The discussions with your customer are automatically displayed at
+	        the bottom of each invoice.
+	      </p>
+	    </field>
+	</record>
+	
+	<record id="account.action_invoice_tree3" model="ir.actions.act_window">
+        <field name="name">Outlet/Customer Refunds</field>
+        <field name="res_model">account.invoice</field>
+        <field name="view_type">form</field>
+        <field name="view_mode">tree,form,calendar,graph</field>
+        <field eval="False" name="view_id"/>
+        <field name="domain">[('type','=','out_refund')]</field>
+        <field name="context">{'default_type':'out_refund', 'type':'out_refund', 'journal_type': 'sale_refund'}</field>
+        <field name="search_view_id" ref="account.view_account_invoice_filter"/>
+        <field name="help" type="html">
+          <p class="oe_view_nocontent_create">
+            Click to create a outlet/customer refund. 
+          </p><p>
+            A refund is a document that credits an invoice completely or
+            partially.
+          </p><p>
+            Instead of manually creating a customer refund, you
+            can generate it directly from the related customer invoice.
+          </p>
+        </field>
+    </record>
+    
+    <record id="invoice_form_dsp" model="ir.ui.view">
+        <field name="name">account.invoice.form.dsp</field>
+        <field name="model">account.invoice</field>
+	    <field name="inherit_id" ref="account.invoice_form"/>        
+        <field name="arch" type="xml">
+            <field string="Customer" name="partner_id"
+               on_change="onchange_partner_id(type,partner_id,date_invoice,payment_term, partner_bank_id,company_id)"
+               groups="base.group_user" context="{'search_default_customer':1, 'show_address': 1}"
+               options='{"always_reload": True}'
+                domain="[('customer', '=', True)]" position="replace">
+	           		<field string="Outlet/Customer" name="partner_id"
+	               on_change="onchange_partner_id(type,partner_id,date_invoice,payment_term, partner_bank_id,company_id)"
+	               groups="base.group_user" context="{'search_default_customer':1, 'show_address': 1}"
+	               options='{"always_reload": True}'
+	                domain="[('customer', '=', True)]" />
+         </field>     
+                
+      </field>
+    </record>
+       
+    
+    <record id="invoice_form_dsp" model="ir.ui.view">
+        <field name="name">account.invoice.form.dsp</field>
+        <field name="model">account.invoice</field>
+        <field name="inherit_id" ref="account.invoice_form"/>        
+        <field name="arch" type="xml">
+        	<xpath expr="/form/sheet/notebook/page[@string='Payments']" position="after">        		
+		  		<page string="Confirmation">
+		  			<group>
+		  				<field name="date_confirmed" attrs="{'required':[('state','in',['draft'])]}"/>
+						<field name="person_name" attrs="{'required':[('state','in',['draft'])]}"/>
+						<field name="file_confirmed" attrs="{'required':[('state','in',['draft'])]}"/>
+	 	  			</group>
+		  		</page>
+        	</xpath>
+        </field>
+    </record>    
+    
+    <menuitem 	name="Outlet/Customer Invoices" 
+			    action="account.action_invoice_tree1" 
+			    id="account.menu_action_invoice_tree1" 
+			    parent="account.menu_finance_receivables"/>
+    <menuitem 	name="Outlet/Customer Refunds" 
+			    action="account.action_invoice_tree3" 
+			    id="account.menu_action_invoice_tree3" 
+			    parent="account.menu_finance_receivables"/>
+	</data>
+</openerp>

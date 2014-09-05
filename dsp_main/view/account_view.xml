@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<openerp>
+    <data>
+
+	<menuitem id="account.menu_account_customer" name="Outlets/Customers"
+            parent="account.menu_finance_receivables"
+            action="base.action_partner_customer_form" sequence="100"/>
+    </data>
+</openerp>

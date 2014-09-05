@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<openerp>
+	<data>
+		
+		<report 
+			id="sale_analysis_form" string="Sale Analysis Report" model="sale.report"
+			name="sale.analysis.form" 
+			file="dsp_main/report/sale_analysis_report.mako"
+			report_type="webkit"
+			auto="False"
+			header="False"			
+			/>
+			
+	</data>
+</openerp>

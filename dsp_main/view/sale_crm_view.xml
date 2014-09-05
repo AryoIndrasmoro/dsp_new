@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<openerp>
+    <data>
+    <record model="ir.ui.view" id="sale_view_inherit_dsp">
+        <field name="name">sale.order.inherit.dsp</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale.view_order_form"/>
+        <field name="arch" type="xml">
+            <field name="user_id" position="replace">
+                <field name="user_id" readonly="1"/>                
+            </field>
+            
+        </field>
+    </record>
+    
+    <record model="ir.ui.view" id="sale_view_inherit123_dsp">
+        <field name="name">sale.order.inherit123.dsp</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale_crm.sale_view_inherit123"/>
+        <field name="arch" type="xml">
+            <field name="section_id" widget="selection" position="replace">
+		    	<field name="section_id" readonly="1"/>
+		    </field>
+        </field>
+    </record>
+    
+    
+    </data>
+</openerp>
