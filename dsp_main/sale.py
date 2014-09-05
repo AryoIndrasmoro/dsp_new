@@ -65,8 +65,7 @@ class sale_order(osv.osv):
     
     _defaults = {
             'dsp_price_list_id' : 'real',
-            'sale_type' : 'Outlet (Direct Selling)',
-            'shop_id'      : '',
+            'sale_type' : 'Outlet (Direct Selling)',            
                  }
       
 sale_order()
@@ -250,6 +249,3 @@ class sale_order_line(osv.osv):
         return result            
             
 sale_order_line()
-
-
-

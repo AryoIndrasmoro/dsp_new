@@ -55,11 +55,11 @@ class stock_picking(osv.osv):
             move_product_qty, prodlot_ids, product_avail, partial_qty, product_uoms = {}, {}, {}, {}, {}
             
             # create validation for confirmation
-            if not pick.person_name or not pick.date_confirmed or not pick.file_confirmed:
-                raise osv.except_osv(_('Warning Confirmation !'), _('Please complete the fields of Confirmation tab form!"'))
-                return False
-            else:
-                self.dsp_send_email(cr, uid, pick.id, context=context)                
+            # if not pick.person_name or not pick.date_confirmed or not pick.file_confirmed:
+                # raise osv.except_osv(_('Warning Confirmation !'), _('Please complete the fields of Confirmation tab form!"'))
+                #-------------------------------------------------- return False
+            #------------------------------------------------------------- else:
+            self.dsp_send_email(cr, uid, pick.id, context=context)                
             
             # Create Cost Component Journal
             total_credit = 0.0
@@ -388,6 +388,10 @@ class stock_picking_out(osv.osv):
             'person_name'           : fields.char('Person Name', size=128),
             'date_confirmed'        : fields.date('Input Date'),
             'file_confirmed'        : fields.binary('Input File'),
+            'person_name_ex'        : fields.char('Person Name', size=128),
+            'date_confirmed_ex'     : fields.date('Input Date'),
+            'file_confirmed_ex'     : fields.binary('Input File'),
+            'notes_ex'              : fields.text('Notes'),
                 }
 
 stock_picking_out()                

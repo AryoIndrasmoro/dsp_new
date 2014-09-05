@@ -12,9 +12,9 @@
 			 	<xpath expr="/form/sheet/notebook/page[@string='Additional Info']" position="after">	 		
 		    		<page string="Confirmation">
 		 	  			<group> 
-		  					<field name="date_confirmed" /> 
-							<field name="person_name" /> 
-							<field name="file_confirmed" /> 
+		  					<field name="date_confirmed" required="1"/> 
+							<field name="person_name" required="1"/> 
+							<field name="file_confirmed" required="1"/> 
 		  				</group> 
 		  			</page>
 				</xpath>		 	 	   	 
@@ -56,9 +56,9 @@
 			 	<xpath expr="/form/sheet/notebook/page[@string='Additional Info']" position="after">
 		    		<page string="Confirmation">
 		 	  			<group> 
-		  					<field name="date_confirmed" /> 
-							<field name="person_name" /> 
-							<field name="file_confirmed" /> 
+		  					<field name="date_confirmed" required="1"/> 
+							<field name="person_name" required="1"/> 
+							<field name="file_confirmed" required="1"/> 
 		  				</group> 
 		  			</page>
 				</xpath> 			
@@ -107,11 +107,19 @@
 			 	<xpath expr="/form/sheet/notebook/page[@string='Additional Info']" position="after">    		
 		  			<page string="Confirmation">
 		 	  			<group> 
-		  					<field name="date_confirmed" /> 
-							<field name="person_name" /> 
-							<field name="file_confirmed" /> 
+		  					<field name="date_confirmed" required="1"/> 
+							<field name="person_name" required="1"/> 
+							<field name="file_confirmed" required="1"/> 
 		  				</group> 
 		  			</page> 	  		
+		  			<page string="Confirmation External">
+		 	  			<group> 
+		  					<field name="date_confirmed_ex" /> 
+							<field name="person_name_ex" /> 
+							<field name="file_confirmed_ex" />
+							<field name="notes_ex" /> 
+		  				</group> 
+		  			</page>
 				</xpath> 	   	  
 			 </field>
 		</record>
