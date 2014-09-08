@@ -45,7 +45,8 @@
             <field name="arch" type="xml">
             	<data>            		
             		<div name="discount" groups="sale.group_discount_per_so_line" position="after">
-                        <field name="cons_doc" on_change="onchange_cons_doc(cons_doc, product_dsp_id, parent.sale_type, parent.partner_id)"/>            			           	
+                        <field name="cons_doc" 
+                        	on_change="onchange_cons_doc(cons_doc, product_dsp_id, parent.sale_type, parent.partner_id)"/>            			           	
                     </div>
             	</data>
             </field>

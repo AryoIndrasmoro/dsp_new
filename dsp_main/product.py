@@ -134,10 +134,10 @@ class product_template(osv.osv):
             context={}
         res = {}
         for product in self.browse(cr, uid, ids, context=context):
-            jkt_cost       = product.jkt_cost                       
-            margin          = product.jkt_cost * (product.margin/ 100)
-            suggest_price   = jkt_cost + margin
-            
+            if product.suggest_price <> 0:
+                jkt_cost       = product.jkt_cost                       
+                margin          = product.jkt_cost * (product.margin/ 100)
+                suggest_price   = jkt_cost + margin            
             
             res[product.id] = {
                     'suggest_price' : suggest_price,

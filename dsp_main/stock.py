@@ -15,8 +15,7 @@ import logging
 
 class stock_picking(osv.osv):
     #_name = "stock.picking.in"
-    _inherit = "stock.picking"
-    
+    _inherit = "stock.picking"    
     _columns = {
             'journal_id'            : fields.many2one('account.journal', 'Bank/ Cash'),
             'cost_component_line'   : fields.one2many('cost.component', 'picking_id', 'Contains'),
@@ -30,6 +29,10 @@ class stock_picking(osv.osv):
             'date_confirmed_ex'     : fields.date('Input Date'),
             'file_confirmed_ex'     : fields.binary('Input File'),
             'notes_ex'              : fields.text('Notes'),
+            'sale_ref'              : fields.many2one('sale.order', 'Sale Reference'),
+            'consignment'           : fields.char('Sale Type'),
+            'sale_warehouse'        : fields.char('Warehouse'),
+            'sales_person'          : fields.char('Sales Person'),
                 }
         
     # FIXME: needs refactoring, this code is partially duplicated in stock_move.do_partial()!
@@ -67,7 +70,7 @@ class stock_picking(osv.osv):
             
             # Create Cost Component Journal
             total_credit = 0.0
-            if pick.type in ['in','internal'] and pick.additional_cost == 'yes' or pick.type in ['in','internal'] and  pick.additional_cost_int == 'yes':
+            if pick.type in ['in','internal']:
                 
                 move_pool = self.pool.get('account.move')
                 move_line_pool = self.pool.get('account.move.line')
@@ -213,8 +216,7 @@ class stock_picking(osv.osv):
                         product_obj.write(cr, uid, [product.id], {
                                                                   'standard_price'  : new_std_price,
                                                                   'list_price'      : new_std_price,
-                                                                  'base_cost'       : new_std_price,                                                                  
-                                                                  'real_price'      : new_std_price + (new_std_price * product.margin),                                                                                                                                                            
+                                                                  'base_cost'       : new_std_price,                                                                                                                                                                                                                                                                                              
                                                                   })
 
                         # Record the values that were chosen in the wizard, so they can be
@@ -388,7 +390,7 @@ stock_picking()
 class stock_picking_out(osv.osv):
     #_name = "stock.picking.in"
     _inherit = "stock.picking.out"    
-    _columns = {
+    _columns = {            
             'person_name'           : fields.char('Person Name', size=128),
             'date_confirmed'        : fields.date('Input Date'),
             'file_confirmed'        : fields.binary('Input File'),
@@ -396,10 +398,15 @@ class stock_picking_out(osv.osv):
             'date_confirmed_ex'     : fields.date('Input Date'),
             'file_confirmed_ex'     : fields.binary('Input File'),
             'notes_ex'              : fields.text('Notes'),
+            'sale_ref'              : fields.many2one('sale.order', 'Source Document'),
+            'consignment'           : fields.char('Sale Type'),
+            'sale_warehouse'        : fields.char('Warehouse'),
+            'sales_person'          : fields.char('Sales Person'),
                 }
     
     _defaults = {            
             'move_type'             : 'one',
+            'sale_ref'              : [0],
                  }
 
 stock_picking_out()                
@@ -415,7 +422,9 @@ class stock_picking_in(osv.osv):
             'additional_cost'       : fields.selection([('no', 'Non Cost Component'), ('yes', 'With Cost Component')], 'Cost Component', readonly=False),
             'person_name'           : fields.char('Person Name', size=128),
             'date_confirmed'        : fields.date('Input Date'),
-            'file_confirmed'        : fields.binary('Input File'),            
+            'file_confirmed'        : fields.binary('Input File'),
+            'consignment'           : fields.char('Sale Type'),         
+            'sales_person'          : fields.char('Sales Person'),   
                 }
     
     _defaults = {

@@ -5,6 +5,38 @@ import pprint
 class sale_order(osv.osv):
     _inherit = "sale.order"
     _description = "Sales Order Inherit DSP"
+    
+    def _prepare_order_picking(self, cr, uid, order, context=None):        
+        pick_name = self.pool.get('ir.sequence').get(cr, uid, 'stock.picking.out')
+        current_user = self.pool.get('res.users').browse(cr, uid, uid, context=context)
+        sale_type = order.sale_type
+        
+        print "aaaaaaaaaaaaaaaaaaaaa" , current_user.name
+        
+        if sale_type == 'Consignment':
+            sale_type = 'Consignment'
+        elif sale_type == 'Outlet (Direct Selling)':
+            sale_type = 'Direct Selling'
+        else:
+            sale_type = 'Promo'            
+        
+        return {
+            'name': pick_name,
+            'origin': order.name,
+            'date': self.date_to_datetime(cr, uid, order.date_order, context),
+            'type': 'out',
+            'state': 'auto',
+            'move_type': order.picking_policy,
+            'sale_id': order.id,
+            'partner_id': order.partner_shipping_id.id,
+            'note': order.note,
+            'invoice_state': (order.order_policy=='picking' and '2binvoiced') or 'none',
+            'company_id': order.company_id.id,
+            'sale_warehouse' : order.shop_id.name,
+            'consignment' : sale_type,
+            'sales_person' : current_user.name,            
+        }
+        
     _columns ={
                'partner_id'     : fields.many2one('res.partner', 'Outlet/Customer', readonly=True, states={'draft': [('readonly', False)], 'sent': [('readonly', False)]}, required=True, change_default=True, select=True, track_visibility='always'),
                'sale_type'      : fields.selection([('Promo', 'Promo'), ('Consignment', 'Consignment'),('Outlet (Direct Selling)','Outlet (Direct Selling)') ], 'Sale Type'),
@@ -57,6 +89,7 @@ class sale_order(osv.osv):
             'user_id': dedicated_salesman,
             'dsp_price_list_id' : dsp_price_list_id, 
             'sale_type' : 'Outlet (Direct Selling)',
+            'dsp_price_list_id' : 'real',
         }
         if pricelist:
             val['pricelist_id'] = pricelist
