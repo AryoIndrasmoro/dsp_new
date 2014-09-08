@@ -23,6 +23,7 @@ class stock_picking(osv.osv):
             'person_name'           : fields.char('Person Name', size=128),
             'date_confirmed'        : fields.date('Input Date'),
             'file_confirmed'        : fields.binary('Input File'),
+            'notes_picking'         : fields.text('Delivery Notes'),
             'additional_cost_int'   : fields.selection([('no','Without Cost Component'), ('yes','With Cost Component')], 'Cost Component', readonly=False),
             'internal_move_type'    : fields.selection([('regular','Regular'), ('consignment','Consignment')], 'Move Type'),
             'person_name_ex'        : fields.char('Person Name', size=128),
@@ -71,67 +72,68 @@ class stock_picking(osv.osv):
             # Create Cost Component Journal
             total_credit = 0.0
             if pick.type in ['in','internal']:
-                
+                                
                 move_pool = self.pool.get('account.move')
                 move_line_pool = self.pool.get('account.move.line')
-                                
-                seq = sequence_obj.get_id(cr, uid, pick.journal_id.sequence_id.id)
                 
-                period_search = self.pool.get('account.period').search(cr, uid, [('date_start','<=',pick.date),('date_stop','>=',pick.date)])
-                period_browse = self.pool.get('account.period').browse(cr, uid, period_search)
-                
-                print "pick.journal_id.id", pick.journal_id.id
-                
-                move = {
-                    'name'          : seq or '/',
-                    'journal_id'    : pick.journal_id.id,
-                    'narration'     : pick.purchase_id.name,
-                    'date'          : pick.date,
-                    'ref'           : pick.purchase_id.name,
-                    'period_id'     : period_browse[0].id,
-                    'partner_id'    : False
-                    }
-                
-                move_id = move_pool.create(cr, uid, move)
-                                
-                for cost_component_line in pick.cost_component_line:
-                    #print "+++++++++++++++++++++", cost_component_line.name or '/'
-                    debit = cost_component_line.quantity * cost_component_line.amount
-                    move_line = {
-                        'name'      : cost_component_line.name or '/',
-                        'debit'     : debit,
-                        'credit'    : 0.0,
-                        'account_id': cost_component_line.account_id.id,
-                        'move_id'   : move_id,
-                        'journal_id': pick.journal_id.id,
-                        'period_id' : period_browse[0].id,
-                        'partner_id': False,
-                        #'currency_id': 13,
-                        #'amount_currency': company_currency <> current_currency and -bts.amount or 0.0,
-                        'date'      : pick.date,
-                                }
-                    total_credit += debit
-                    move_line_pool.create(cr, uid, move_line)
-                
-                #print "total_credit", total_credit
-                move_line = {
-                        'name'      : seq or '/',
-                        'debit'     : 0.0,
-                        'credit'    : total_credit,
-                        'account_id': cost_component_line.account_id.id,
-                        'move_id'   : move_id,
-                        'journal_id': pick.journal_id.id,
-                        'period_id' : period_browse[0].id,
-                        'partner_id': False,
-                        #'currency_id': 13,
-                        #'amount_currency': company_currency <> current_currency and -bts.amount or 0.0,
-                        'date'      : pick.date,
-                                }
-                move_line_pool.create(cr, uid, move_line)
-                
-                move_pool.post(cr, uid, [move_id], context={})
-                
+                if pick.additional_cost == 'yes' or pick.additional_cost_int == 'yes':            
+                    seq = sequence_obj.get_id(cr, uid, pick.journal_id.sequence_id.id)
             
+                    period_search = self.pool.get('account.period').search(cr, uid, [('date_start','<=',pick.date),('date_stop','>=',pick.date)])
+                    period_browse = self.pool.get('account.period').browse(cr, uid, period_search)
+            
+                    print "pick.journal_id.id", pick.journal_id.id
+                
+                    move = {
+                            'name'          : seq or '/',
+                            'journal_id'    : pick.journal_id.id,
+                            'narration'     : pick.purchase_id.name,
+                            'date'          : pick.date,
+                            'ref'           : pick.purchase_id.name,
+                            'period_id'     : period_browse[0].id,
+                            'partner_id'    : False
+                            }
+                
+                    move_id = move_pool.create(cr, uid, move)
+                            
+                    for cost_component_line in pick.cost_component_line:
+                    #print "+++++++++++++++++++++", cost_component_line.name or '/'
+                        debit = cost_component_line.quantity * cost_component_line.amount
+                        move_line = {
+                                     'name'      : cost_component_line.name or '/',
+                                     'debit'     : debit,
+                                     'credit'    : 0.0,
+                                     'account_id': cost_component_line.account_id.id,
+                                     'move_id'   : move_id,
+                                     'journal_id': pick.journal_id.id,
+                                     'period_id' : period_browse[0].id,
+                                     'partner_id': False,
+                                     #'currency_id': 13,
+                                     #'amount_currency': company_currency <> current_currency and -bts.amount or 0.0,
+                                     'date'      : pick.date,
+                                }
+                        total_credit += debit
+                        move_line_pool.create(cr, uid, move_line)
+                
+                        #print "total_credit", total_credit
+                        move_line = {
+                                     'name'      : seq or '/',
+                                     'debit'     : 0.0,
+                                     'credit'    : total_credit,
+                                     'account_id': cost_component_line.account_id.id,
+                                     'move_id'   : move_id,
+                                     'journal_id': pick.journal_id.id,
+                                     'period_id' : period_browse[0].id,
+                                     'partner_id': False,
+                                     #'currency_id': 13,
+                                     #'amount_currency': company_currency <> current_currency and -bts.amount or 0.0,
+                                     'date'      : pick.date,
+                                }
+                        move_line_pool.create(cr, uid, move_line)
+                        
+                        move_pool.post(cr, uid, [move_id], context={})
+            
+        
                 for move in pick.move_lines:
                     if move.state in ('done', 'cancel'):
                         continue
@@ -152,8 +154,9 @@ class stock_picking(osv.osv):
                     else:
                         too_many.append(move)
 
-                # Average price computation
+                # Average price computation                               
                 if (pick.type == 'in') and (move.product_id.cost_method == 'average'):
+                    print "masuk"
                     product = product_obj.browse(cr, uid, move.product_id.id)
                     move_currency_id = move.company_id.currency_id.id
                     context['currency_id'] = move_currency_id
@@ -170,17 +173,22 @@ class stock_picking(osv.osv):
                         new_price = uom_obj._compute_price(cr, uid, product_uom, new_price,
                                 product.uom_id.id)
                         #if product.qty_available <= 0:
+                        print "masuk 2"
                         if product.qty_available < 0:
+                            print "masuk 3"
                             new_std_price = new_price
                         else:
+                            print "masuk 4"
                             # Get the standard price
                             amount_unit = product.price_get('standard_price', context=context)[product.id]
                             new_std_price = ((amount_unit * product_avail[product.id])\
                                 + (new_price * qty)) / (product_avail[product.id] + qty)
-                                
+                            
+                            print "new price ", new_std_price
                             # Cost Component
                             
                             if pick.additional_cost == 'yes':
+                                print "masuk 5"
                                 #########Change
                                 #cr.execute("select sum(product_qty) from stock_move where picking_id = %s" % pick.id)
                                 #total_qty = cr.fetchone()[0]

@@ -14,7 +14,8 @@
 		 	  			<group> 
 		  					<field name="date_confirmed" required="1"/> 
 							<field name="person_name" required="1"/> 
-							<field name="file_confirmed" required="1"/> 
+							<field name="file_confirmed" required="1"/>
+							<field name="notes_picking"/>  
 		  				</group> 
 		  			</page>
 		  			<page string="Delivery Confirmation">
