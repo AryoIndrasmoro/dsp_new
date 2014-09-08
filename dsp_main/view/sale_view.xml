@@ -14,9 +14,9 @@
 					<page string="Other Information" groups="base.group_user" position="after">
 				  		<page string="Order Confirmation">
 				  			<group>
-				  				<field name="date_confirmed" attrs="{'required':[('state','=','sent')]}" />
-								<field name="person_name" attrs="{'required':[('state','=','sent')]}" />
-								<field name="file_confirmed" attrs="{'required':[('state','=','sent')]}" />
+				  				<field name="date_confirmed" attrs="{'required':[('state','=','draft')]}" />
+								<field name="person_name" attrs="{'required':[('state','=','draft')]}" />
+								<field name="file_confirmed" attrs="{'required':[('state','=','draft')]}" />
 			 	  			</group>
 				  		</page>
 					</page>

@@ -12,18 +12,18 @@
 			 	<xpath expr="/form/sheet/notebook/page[@string='Additional Info']" position="after">	 		
 		    		<page string="Picking Confirmation">
 		 	  			<group> 
-		  					<field name="date_confirmed" required="1"/> 
-							<field name="person_name" required="1"/> 
-							<field name="file_confirmed" required="1"/>
+		  					<field name="date_confirmed" attrs="{'required':['|', ('state', '=', 'assigned'), ('state', '=', 'done')]}"/> 
+							<field name="person_name" attrs="{'required':['|', ('state', '=', 'assigned'), ('state', '=', 'done')]}"/> 
+							<field name="file_confirmed" attrs="{'required':['|', ('state', '=', 'assigned'), ('state', '=', 'done')]}"/>
 							<field name="notes_picking"/>  
 		  				</group> 
 		  			</page>
 		  			<page string="Delivery Confirmation">
 		 	  			<group> 
-		  					<field name="date_confirmed_ex" required="1"/> 
-							<field name="person_name_ex" required="1"/> 
-							<field name="file_confirmed_ex" required="1"/>
-							<field name="notes_ex" required="1"/>
+		  					<field name="date_confirmed_ex" /> 
+							<field name="person_name_ex" /> 
+							<field name="file_confirmed_ex" />
+							<field name="notes_ex" />
 		  				</group> 
 		  			</page>
 				</xpath>		 	 	   	 
@@ -65,9 +65,9 @@
 			 	<xpath expr="/form/sheet/notebook/page[@string='Additional Info']" position="after">
 		    		<page string="Shipment Confirmation">
 		 	  			<group> 
-		  					<field name="date_confirmed" required="1"/> 
-							<field name="person_name" required="1"/> 
-							<field name="file_confirmed" required="1"/> 
+		  					<field name="date_confirmed" attrs="{'required':['|', ('state', '=', 'assigned'), ('state', '=', 'done')]}"/> 
+							<field name="person_name" attrs="{'required':['|', ('state', '=', 'assigned'), ('state', '=', 'done')]}"/> 
+							<field name="file_confirmed" attrs="{'required':['|', ('state', '=', 'assigned'), ('state', '=', 'done')]}"/> 
 		  				</group> 
 		  			</page>
 				</xpath> 			
@@ -122,12 +122,9 @@
 			 	<xpath expr="/form/sheet/notebook/page[@string='Additional Info']" position="after">    		
 		  			<page string="Picking Confirmation">
 		 	  			<group> 
-		  					<field name="date_confirmed" required="1"/> 
-							<field name="person_name" required="1"/> 
-							<field name="file_confirmed" required="1"/> 							
-							<field name="consignment"/>
-							<field name="sale_warehouse"/>
-							<field name="sales_person"/>
+		  					<field name="date_confirmed" attrs="{'required':['|', ('state', '=', 'assigned'), ('state', '=', 'done')]}"/> 
+							<field name="person_name" attrs="{'required':['|', ('state', '=', 'assigned'), ('state', '=', 'done')]}"/> 
+							<field name="file_confirmed" attrs="{'required':['|', ('state', '=', 'assigned'), ('state', '=', 'done')]}"/> 														
 		  				</group> 
 		  			</page> 	  		
 		  			<page string="Delivery Confirmation">
