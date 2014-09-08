@@ -240,46 +240,45 @@ class stock_picking(osv.osv):
                     #context['currency_id'] = move_currency_id
                     qty = uom_obj._compute_qty(cr, uid, product_uom, product_qty, product.uom_id.id)
                     total_qty = 0.0
-                    if pick.additional_cost_int == 'yes':
-                        product = product_obj.browse(cr, uid, move.product_id.id)
-                        amount_unit = product.price_get('standard_price', context=context)[product.id]
-                        product_avail[product.id] = product.qty_available                        
+                    #if pick.additional_cost_int == 'yes':
+                    product = product_obj.browse(cr, uid, move.product_id.id)
+                    amount_unit = product.price_get('standard_price', context=context)[product.id]
+                    product_avail[product.id] = product.qty_available                        
+                    
+                    ####Change
+                    #cr.execute("select sum(product_qty) from stock_move where picking_id = %s" % pick.id)
+                    #total_qty = cr.fetchone()[0]
+                                            
+                    for move in pick.move_lines:
+                        partial_data = partial_datas.get('move%s' % (move.id), {})
+                        product_qty = partial_data.get('product_qty', 0.0)
                         
-                        ####Change
-                        #cr.execute("select sum(product_qty) from stock_move where picking_id = %s" % pick.id)
-                        #total_qty = cr.fetchone()[0]
-                                                
-                        for move in pick.move_lines:
-                            partial_data = partial_datas.get('move%s' % (move.id), {})
-                            product_qty = partial_data.get('product_qty', 0.0)
-                            
-                            total_qty += product_qty
-                        
-                        print "total_qty>>>>>>>>>>>>>>>>>> INTERNAL", total_qty, total_credit, total_credit * (total_qty), qty, amount_unit, cost_component_line.amount
-                        result_jkt_cost = 0.0                        
-                        cost_component_each_item = total_credit / (qty) or 0.0
-                        if product.jkt_cost == 0:
-                            product.jkt_cost = product.base_cost
-                        new_std_price = product.base_cost + cost_component_each_item
-                        print "jkt_cost ", product.jkt_cost,product.base_cost, cost_component_each_item                                         
-                        
-                        #=======================================================
-                        # print "amount_unit INTERNAL", amount_unit
-                        # print "product_avail INTERNAL", product_avail
-                        # #print "new_price INTERNAL", new_price
-                        # print "qty INTERNAL", qty
-                        # print "cost_component_each_item INTERNAL", cost_component_each_item
-                        # 
-                        # 
-                        # 
-                        # print "new_std_price", new_std_price
-                        #=======================================================
-                        
-                        #product_obj.write(cr, uid, [product.id], {'standard_price': new_std_price})
-                        ##EDIT TO
-                        product_obj.write(cr, uid, [product.id], {
-                                                                  'jkt_cost'        : new_std_price,                                                                                                                                
-                                                                  })
+                        total_qty += product_qty
+                                        
+                    result_jkt_cost = 0.0                        
+                    cost_component_each_item = total_credit / (qty) or 0.0
+                    if product.jkt_cost == 0:
+                        product.jkt_cost = product.base_cost
+                    new_std_price = product.base_cost + cost_component_each_item
+                    print "jkt_cost ", product.jkt_cost,product.base_cost, cost_component_each_item                                         
+                    
+                    #=======================================================
+                    # print "amount_unit INTERNAL", amount_unit
+                    # print "product_avail INTERNAL", product_avail
+                    # #print "new_price INTERNAL", new_price
+                    # print "qty INTERNAL", qty
+                    # print "cost_component_each_item INTERNAL", cost_component_each_item
+                    # 
+                    # 
+                    # 
+                    # print "new_std_price", new_std_price
+                    #=======================================================
+                    
+                    #product_obj.write(cr, uid, [product.id], {'standard_price': new_std_price})
+                    ##EDIT TO
+                    product_obj.write(cr, uid, [product.id], {
+                                                              'jkt_cost'        : new_std_price,                                                                                                                                
+                                                              })
 
             for move in too_few:
                 product_qty = move_product_qty[move.id]
