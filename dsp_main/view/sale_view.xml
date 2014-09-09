@@ -68,11 +68,25 @@
             	<data>            		
             		<div name="discount" groups="sale.group_discount_per_so_line" position="after">
                         <field name="cons_doc" 
-                        	on_change="onchange_cons_doc(cons_doc, product_dsp_id, parent.sale_type, parent.partner_id)"/>            			           	
+                        	on_change="onchange_cons_doc(cons_doc, product_dsp_id, parent.sale_type, parent.partner_id)"/>                        	            			           	
                     </div>
             	</data>
             </field>
     	</record>    	    	
+    	
+    	<record id="view_order_tree_dsp" model="ir.ui.view">
+            <field name="name">sale.order.tree.dsp</field>
+            <field name="model">sale.order</field>
+            <field name="inherit_id" ref="sale.view_order_form"/>
+            <field name="arch" type="xml">
+            	<xpath expr="/form/sheet/notebook/page[@string='Order Lines']/field[@name='order_line']/tree/field[@name='product_id']" position="replace">
+        			<field name="product_id" invisible="1"/>
+        		</xpath>
+        		<xpath expr="/form/sheet/notebook/page[@string='Order Lines']/field[@name='order_line']/tree/field[@name='name']" position="replace">
+        			<field name="name" string="Product"/>
+        		</xpath>
+            </field>
+    	</record>
     	
 	</data>
 </openerp>
