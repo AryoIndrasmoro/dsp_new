@@ -67,7 +67,7 @@ class stock_picking(osv.osv):
                 # raise osv.except_osv(_('Warning Confirmation !'), _('Please complete the fields of Confirmation tab form!"'))
                 #-------------------------------------------------- return False
             #------------------------------------------------------------- else:
-            self.dsp_send_email(cr, uid, pick.id, context=context)                
+            self.dsp_send_email(cr, uid, pick.id, pick.id, context=context)                
             
             # Create Cost Component Journal
             total_credit = 0.0
@@ -360,29 +360,38 @@ class stock_picking(osv.osv):
     
     
 #     #Send mail sans queue
-    def dsp_send_email(self, cr, uid, pick_id, context=None):
-        email_template_obj = self.pool.get('email.template')
-        template_ids = email_template_obj.search(cr, uid, [('model_id.model', '=','stock.picking.out')], context=context)
-        body_html = self.pool.get('email.template').browse(cr, uid, template_ids[0],context=context).body_html                
-        current_email = self.pool.get('res.users').browse(cr, uid, uid, context=context).email
-        name = self.browse(cr, uid, pick_id, context=context).name        
-        origin = self.browse(cr, uid, pick_id, context=context).origin
-        type = self.browse(cr, uid, pick_id, context=context).type
-        file_confirmed = self.browse(cr, uid, pick_id, context=context).file_confirmed
+#     def dsp_send_email(self, cr, uid, pick_id, context=None):
+        #=======================================================================
+        # email_template_obj = self.pool.get('email.template')
+        # template_ids = email_template_obj.search(cr, uid, [('model_id.model', '=','stock.picking.out')], context=context)
+        # body_html = self.pool.get('email.template').browse(cr, uid, template_ids[0],context=context).body_html                
+        # current_email = self.pool.get('res.users').browse(cr, uid, uid, context=context).email
+        # name = self.browse(cr, uid, pick_id, context=context).name        
+        # origin = self.browse(cr, uid, pick_id, context=context).origin
+        # type = self.browse(cr, uid, pick_id, context=context).type
+        # file_confirmed = self.browse(cr, uid, pick_id, context=context).file_confirmed
+        # 
+        # if template_ids:
+        #     values = email_template_obj.generate_email(cr, uid, template_ids[0], pick_id , context=context)
+        #     values['subject'] = 'Delivery Order ' + str(name) + str(type)
+        #     values['email_from'] = current_email
+        #     values['email_to'] = 'samuel.alfius@gmail.com'
+        #     values['body_html'] = str(name) + '---' + str(origin)
+        #     values['body'] = 'body'
+        #     values['res_id'] = False
+        #     values['attachment'] = file_confirmed
+        #     mail_mail_obj = self.pool.get('mail.mail')
+        #     msg_id = mail_mail_obj.create(cr, uid, values, context=context)            
+        #     if msg_id:
+        #           mail_mail_obj.send(cr, uid, [msg_id], context=context) 
+        # return True
+        #=======================================================================
         
+    def dsp_send_email(self, cr, uid, pick_id, res_id, context=None):
+        email_template_obj = self.pool.get('email.template')
+        template_ids = email_template_obj.search(cr, uid, [('model_id.model', '=','stock.picking.out')], context=context) 
         if template_ids:
-            values = email_template_obj.generate_email(cr, uid, template_ids[0], pick_id , context=context)
-            values['subject'] = 'Delivery Order ' + str(name) + str(type)
-            values['email_from'] = current_email
-            values['email_to'] = 'samuel.alfius@gmail.com'
-            values['body_html'] = str(name) + '---' + str(origin)
-            values['body'] = 'body'
-            values['res_id'] = False
-            values['attachment'] = file_confirmed
-            mail_mail_obj = self.pool.get('mail.mail')
-            msg_id = mail_mail_obj.create(cr, uid, values, context=context)            
-            if msg_id:
-                  mail_mail_obj.send(cr, uid, [msg_id], context=context) 
+            email_template_obj.send_mail(cr, uid, template_ids[0], res_id, force_send=True, context=context)
         return True
  
     _defaults = {
