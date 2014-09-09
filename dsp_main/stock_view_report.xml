@@ -1,0 +1,6 @@
+<?xml version="1.0"?>
+<openerp>
+	<data>
+		<report id="report_picking_list_price" model="stock.picking.out" name="stock.picking.list.price" string="Delivery Slip (Price)" rml="dsp_main/report/picking_price.rml"/>
+	</data>
+</openerp>
