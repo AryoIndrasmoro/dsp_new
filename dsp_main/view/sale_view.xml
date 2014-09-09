@@ -1,39 +1,61 @@
 <openerp>
-	<data>
-		
+	<data>		
     	<record id="view_order_pricelist_form" model="ir.ui.view">
             <field name="name">sale.order.pricelist.form</field>
             <field name="model">sale.order</field>
             <field name="inherit_id" ref="sale.view_order_form"/>
-            <field name="arch" type="xml">            
-            	<data>            	      
-            		<field name="partner_shipping_id" position="after">
-	            		<field name="sale_type"/>
-	                </field>
-	                
-					<page string="Other Information" groups="base.group_user" position="after">
-				  		<page string="Order Confirmation">
-				  			<group>
-				  				<field name="date_confirmed" attrs="{'required':[('state','=','draft')]}" />
-								<field name="person_name" attrs="{'required':[('state','=','draft')]}" />
-								<field name="file_confirmed" attrs="{'required':[('state','=','draft')]}" />
-			 	  			</group>
-				  		</page>
-					</page>
-				      
-            		<xpath expr="//form/sheet/notebook/page[@string='Order Lines']/field[@name='order_line']/form/group/group[1]/field[@name='price_unit']" position="attributes">
-            			<attribute name="groups">base.group_erp_manager</attribute>
-            		</xpath>	
-            	
-            		<xpath expr="//form/sheet/group/group[1]/field[@name='sale_type']" position="after">
-            			<field name="dsp_price_list_id" 
-            				attrs="{'invisible':[('sale_type','!=','Outlet (Direct Selling)')]}"/>
-            		</xpath>
-            		
-            		<xpath expr="//form/sheet/notebook/page[@string='Order Lines']/field[@name='order_line']/form/group/group[1]/field[@name='product_id']" position="after">
-            			<field name="product_dsp_id" on_change="onchange_product_dsp_id(product_dsp_id, parent.sale_type, parent.dsp_price_list_id, parent.partner_id)"/>           		
-            		</xpath>
-            	</data>
+            <field name="arch" type="xml">																	
+				<button name="action_button_confirm" position="replace">
+					<button name="action_button_confirm" states="quotation_confirm" string="Confirm Sale" type="object" groups="base.group_user"/>
+				</button>				
+				<button name="action_button_confirm" states="sent" position="replace">
+					<button name="action_confirm_quotation" states="sent" string="Confirm Quotation" type="object" groups="base.group_user" class="oe_highlight"/>
+				</button>
+				<button name="action_quotation_send" position="replace">
+					<button name="action_quotation_send" string="Send by Email" type="object" states="draft,quotation_confirm" class="oe_highlight" groups="base.group_user"/>
+				</button>
+				<button name="print_quotation" position="replace">          
+					<button name="print_quotation" string="Print" type="object" states="draft,quotation_confirm" class="oe_highlight" groups="base.group_user"/>
+				</button>
+				<button name="cancel" position="replace">
+					<button name="cancel" states="draft,quotation_confirm,sent" string="Cancel Quotation" groups="base.group_user"/>
+				</button>													          
+				<button name="print_quotation" position="after">          
+					<button name="action_confirm_quotation" states="draft" string="Confirm Quotation" type="object" groups="base.group_user"/>
+				</button>				
+        		<field name="partner_shipping_id" position="after">
+            		<field name="sale_type"/>
+                </field>     
+                           
+				<page string="Other Information" groups="base.group_user" position="after">
+			  		<page string="Quotation Confirmation">
+			  			<group>
+			  				<field name="date_confirmed" attrs="{'required':[('state','=','quotation_confirm')]}" />
+							<field name="person_name" attrs="{'required':[('state','=','quotation_confirm')]}" />
+							<field name="file_confirmed" attrs="{'required':[('state','=','quotation_confirm')]}" />
+		 	  			</group>
+			  		</page>
+			  		<page string="Order Confirmation">
+			  			<group>
+			  				<field name="date_confirmed_order" attrs="{'required':[('state','=','progress')]}" />
+							<field name="person_name_order" attrs="{'required':[('state','=','progress')]}" />
+							<field name="file_confirmed_order" attrs="{'required':[('state','=','progress')]}" />
+		 	  			</group>
+			  		</page>
+				</page>
+			      
+        		<xpath expr="//form/sheet/notebook/page[@string='Order Lines']/field[@name='order_line']/form/group/group[1]/field[@name='price_unit']" position="attributes">
+        			<attribute name="groups">base.group_erp_manager</attribute>
+        		</xpath>	
+        	
+        		<xpath expr="//form/sheet/group/group[1]/field[@name='sale_type']" position="after">
+        			<field name="dsp_price_list_id" 
+        				attrs="{'invisible':[('sale_type','!=','Outlet (Direct Selling)')]}"/>
+        		</xpath>
+        		
+        		<xpath expr="//form/sheet/notebook/page[@string='Order Lines']/field[@name='order_line']/form/group/group[1]/field[@name='product_id']" position="after">
+        			<field name="product_dsp_id" on_change="onchange_product_dsp_id(product_dsp_id, parent.sale_type, parent.dsp_price_list_id, parent.partner_id)"/>           		
+        		</xpath>        	
             </field>
     	</record>
     	

@@ -94,9 +94,9 @@ class product_product(osv.osv):
             if d.get('variants'):
                 name = name + ' - %s' % (d['variants'],)
             return (d['id'], name)
-
+ 
         partner_id = context.get('partner_id', False)
-
+ 
         result = []
         for product in self.browse(cr, user, ids, context=context):
             sellers = filter(lambda x: x.name.id == partner_id, product.seller_ids)

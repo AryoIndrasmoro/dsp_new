@@ -6,6 +6,9 @@ class sale_order(osv.osv):
     _inherit = "sale.order"
     _description = "Sales Order Inherit DSP"
     
+    def action_confirm_quotation(self, cr, uid, ids, context=None):        
+        return self.write(cr, uid, ids, {'state': 'quotation_confirm'})        
+    
     def _prepare_order_picking(self, cr, uid, order, context=None):        
         pick_name = self.pool.get('ir.sequence').get(cr, uid, 'stock.picking.out')
         current_user = self.pool.get('res.users').browse(cr, uid, uid, context=context)
@@ -38,12 +41,28 @@ class sale_order(osv.osv):
         }
         
     _columns ={
-               'partner_id'     : fields.many2one('res.partner', 'Outlet/Customer', readonly=True, states={'draft': [('readonly', False)], 'sent': [('readonly', False)]}, required=True, change_default=True, select=True, track_visibility='always'),
-               'sale_type'      : fields.selection([('Promo', 'Promo'), ('Consignment', 'Consignment'),('Outlet (Direct Selling)','Outlet (Direct Selling)') ], 'Sale Type'),
-               'person_name'    : fields.char('Person Name', size=128),
-               'date_confirmed' : fields.date('Input Date'),
-               'file_confirmed' : fields.binary('Input File'),
-               'dsp_price_list_id': fields.selection([('real', 'Real Price'), ('outlet', 'Outlet Price')], 'DSP Price List'),    
+               'partner_id'         : fields.many2one('res.partner', 'Outlet/Customer', readonly=True, states={'draft': [('readonly', False)], 'sent': [('readonly', False)]}, required=True, change_default=True, select=True, track_visibility='always'),
+               'sale_type'          : fields.selection([('Promo', 'Promo'), ('Consignment', 'Consignment'),('Outlet (Direct Selling)','Outlet (Direct Selling)') ], 'Sale Type'),
+               'person_name'        : fields.char('Person Name', size=128),
+               'date_confirmed'     : fields.date('Input Date'),
+               'file_confirmed'     : fields.binary('Quotation File'),
+               'person_name_order'    : fields.char('Person Name', size=128),
+               'date_confirmed_order' : fields.date('Input Date'),
+               'file_confirmed_order' : fields.binary('Sales Order File'),
+               'dsp_price_list_id': fields.selection([('real', 'Real Price'), ('outlet', 'Outlet Price')], 'DSP Price List'),
+               'state': fields.selection([
+                    ('draft', 'Draft Quotation'),
+                    ('sent', 'Quotation Sent'),
+                    ('cancel', 'Cancelled'),
+                    ('waiting_date', 'Waiting Schedule'),
+                    ('quotation_confirm', 'Quotation Confirmed'),                    
+                    ('progress', 'Sales Order'),
+                    ('order_confirm', 'Order Confirmed'),
+                    ('manual', 'Sale to Invoice'),
+                    ('invoice_except', 'Invoice Exception'),
+                    ('done', 'Done'),
+                    ], 'Status', readonly=True, track_visibility='onchange',
+                    help="Gives the status of the quotation or sales order. \nThe exception status is automatically set when a cancel operation occurs in the processing of a document linked to the sales order. \nThe 'Waiting Schedule' status is set when the invoice is confirmed but waiting for the scheduler to run on the order date.", select=True),    
             }
     
 #===============================================================================

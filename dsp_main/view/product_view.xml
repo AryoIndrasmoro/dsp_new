@@ -28,10 +28,7 @@
 							</group>										
 						</group>
 					</page>
-				</page>
-				<field name="description" position="before">
-	
-				</field>
+				</page>				
 				<xpath expr="/form/sheet/notebook/page[@string='Sales']" position="after">
 	                <page string="Price List" groups="base.group_erp_manager">
 	                	<group>
