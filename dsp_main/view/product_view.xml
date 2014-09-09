@@ -116,6 +116,40 @@
             		<attribute name="invisible">True</attribute>           	
             	</xpath>            	            	                        	                	      
             </field>
-        </record>			       
+        </record>
+        
+        <record id="product_search_form_view_dsp" model="ir.ui.view">
+            <field name="name">product.search.form.dsp</field>
+            <field name="model">product.product</field>
+            <field name="inherit_id" ref="product.product_search_form_view"/>
+            <field name="arch" type="xml">
+            	<xpath expr="/search/group/filter[@string='Type']" position="after">            		            
+                   <filter string='Vintage' icon="terp-stock_symbol-selection" domain="[]" context="{'group_by' : 'vintages'}"/>                       	                               
+                   <filter string='Classification' icon="terp-stock_symbol-selection" domain="[]" context="{'group_by' : 'classification'}"/>
+                   <filter string='Volume L' icon="terp-stock_symbol-selection" domain="[]" context="{'group_by' : 'volume_l'}"/>
+                   <filter string='Volume Alcohol' icon="terp-stock_symbol-selection" domain="[]" context="{'group_by' : 'volume_alcohol'}"/>
+                   <filter string='Grape' icon="terp-stock_symbol-selection" domain="[]" context="{'group_by' : 'grape_id'}"/>
+                   <filter string='Country' icon="terp-stock_symbol-selection" domain="[]" context="{'group_by' : 'country_id'}"/>
+                   <filter string='Region' icon="terp-stock_symbol-selection" domain="[]" context="{'group_by' : 'region_id'}"/>
+                   <filter string='Appelation' icon="terp-stock_symbol-selection" domain="[]" context="{'group_by' : 'appelation_id'}"/>
+                   <filter string='Type' icon="terp-stock_symbol-selection" domain="[]" context="{'group_by' : 'type_id'}"/>
+         		</xpath>
+            </field>
+        </record>
+        
+        <record id="product_product_tree_view_dsp" model="ir.ui.view">
+            <field name="name">product.product.tree.dsp</field>
+            <field name="model">product.product</field>
+            <field name="inherit_id" ref="product.product_product_tree_view"/>
+            <field name="arch" type="xml">   
+				<tree position="attributes">
+    				<attribute name="colors">orange:suggest_price != real_price;red:virtual_available&lt;0;blue:virtual_available&gt;=0 and state in ('draft', 'end', 'obsolete');black:virtual_available&gt;=0 and state not in ('draft', 'end', 'obsolete')</attribute>
+				</tree>            	                              
+				<field name="default_code" position="replace">
+					<field name="default_code" invisible="1"/>
+				</field>
+            </field>
+        </record>
+        			       
     </data>
 </openerp>

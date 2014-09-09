@@ -255,11 +255,14 @@ class stock_picking(osv.osv):
                         
                         total_qty += product_qty
                                         
-                    result_jkt_cost = 0.0                        
+                    result_jkt_cost = 0.0    
+                    real_price = 0.0                    
                     cost_component_each_item = total_credit / (qty) or 0.0
                     if product.jkt_cost == 0:
                         product.jkt_cost = product.base_cost
-                    new_std_price = product.base_cost + cost_component_each_item
+                    result_jkt_cost = product.base_cost + cost_component_each_item
+                    if product.real_price == 0:
+                        real_price = result_jkt_cost
                     print "jkt_cost ", product.jkt_cost,product.base_cost, cost_component_each_item                                         
                     
                     #=======================================================
@@ -277,7 +280,8 @@ class stock_picking(osv.osv):
                     #product_obj.write(cr, uid, [product.id], {'standard_price': new_std_price})
                     ##EDIT TO
                     product_obj.write(cr, uid, [product.id], {
-                                                              'jkt_cost'        : new_std_price,                                                                                                                                
+                                                              'jkt_cost'        : result_jkt_cost,                                                                                                                                
+                                                              'real_price'      : real_price,
                                                               })
 
             for move in too_few:

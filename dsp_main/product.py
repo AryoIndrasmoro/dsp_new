@@ -51,7 +51,7 @@ class product_product(osv.osv):
     _inherit = 'product.product'
     _columns = {
         #'vintages': fields.boolean('Outlets/Customers', help="Check this box if this contact is a customer / outlet."),
-        'vintages': fields.selection([(num, str(num)) for num in range(1970, (datetime.now().year) )], 'Vintages'),
+        'vintages': fields.selection([(num, str(num)) for num in range(1970, (datetime.now().year) )], 'Vintages', store='True'),
         'classification': fields.char('Classification', size=128),
         'volume_l': fields.float('Volume (L)', digits_compute=dp.get_precision('Product Price')),
         'volume_alcohol': fields.float('Volume Alcohol (%)', digits_compute=dp.get_precision('Product Price')),
