@@ -34,9 +34,9 @@ class stock_picking(osv.osv):
             'consignment'           : fields.char('Sale Type'),
             'sale_warehouse'        : fields.char('Warehouse'),
             'sales_person'          : fields.char('Sales Person'),
-                }
+                }                
         
-    # FIXME: needs refactoring, this code is partially duplicated in stock_move.do_partial()!
+    # FIXME: needs refactoring, this code is partially duplicated in stock_move.do_partial()!    
     def do_partial(self, cr, uid, ids, partial_datas, context=None):
         print "Picking In>>>>>>>>>>>>>>>>>>>>>."
         """ Makes partial picking and moves done.
@@ -119,8 +119,8 @@ class stock_picking(osv.osv):
                         move_line = {
                                      'name'      : seq or '/',
                                      'debit'     : 0.0,
-                                     'credit'    : total_credit,
-                                     'account_id': cost_component_line.account_id.id,
+                                     'credit'    : debit,
+                                     'account_id': pick.journal_id.default_credit_account_id.id,
                                      'move_id'   : move_id,
                                      'journal_id': pick.journal_id.id,
                                      'period_id' : period_browse[0].id,
@@ -260,7 +260,7 @@ class stock_picking(osv.osv):
                     cost_component_each_item = total_credit / (qty) or 0.0                    
                     result_jkt_cost = product.base_cost + cost_component_each_item
                     if product.real_price == 0:
-                        real_price = result_jkt_cost
+                        real_price = product.suggest_price
                     else:
                         real_price = product.real_price
                     print "jkt_cost ", product.jkt_cost,product.base_cost, cost_component_each_item                                         
@@ -463,6 +463,7 @@ class cost_component(osv.osv):
             'quantity'      : fields.float('Quantity', required=True),
             'account_id'    : fields.many2one('account.account', 'Account', required=True),
             'amount'        : fields.float('Amount', required=True),
+            'journal_id'    : fields.many2one('account.journal', 'Bank/ Cash'),
                 }
     
     _defaults = {
@@ -474,7 +475,20 @@ class cost_component(osv.osv):
 cost_component()
 
 class stock_move(osv.osv):    
-    _inherit = "stock.move"    
+    _inherit = "stock.move"
+    
+    def _compute_net_total(self, cr, uid, ids):        
+        for line in self.browse(cr, uid, ids):
+            price = line.price_unit                        
+        return price
+    
+    def _compute_sub_total(self, cr, uid, ids, price_unit, qty):                
+        price = price_unit * qty                        
+        return price
+        
+    _columns = {
+            'net_total'    : fields.function(_compute_net_total, type='float', string='Net Total'),            
+                }    
     
     def onchange_product_id(self, cr, uid, ids, prod_id=False, loc_id=False,
                             loc_dest_id=False, partner_id=False):

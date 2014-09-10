@@ -38,13 +38,33 @@ class picking_price(report_sxw.rml_parse):
         self.localcontext.update({
             'time': time,
             'get_product_desc': self.get_product_desc,
+            'get_total_qty': self.get_total_qty,
+            'get_total_amount': self.get_total_amount,                        
         })
     def get_product_desc(self, move_line):
-        desc = move_line.product_id.name
-        if move_line.product_id.default_code:
-            desc = '[' + move_line.product_id.default_code + ']' + ' ' + desc
-        return desc
+        price = move_line.price_unit * move_line.product_qty
+        return price
+        
+        #=======================================================================
+        # desc = move_line.product_id.name
+        # if move_line.product_id.default_code:
+        #     desc = '[' + move_line.product_id.default_code + ']' + ' ' + desc
+        # return desc        
+        #=======================================================================
 
+    def get_total_qty(self, picking):
+        total_qty = 0
+        for line in picking.move_lines:
+            total_qty = total_qty + line.product_qty        
+        return total_qty
+    
+    def get_total_amount(self, picking):
+        total_amount = 0        
+        for line in picking.move_lines:
+            price = line.price_unit * line.product_qty
+            total_amount = total_amount + price        
+        return total_amount        
+    
 for suffix in ['', '.in', '.out']:
     report_sxw.report_sxw('report.stock.picking.list.price' + suffix,
                           'stock.picking.out' + suffix,
