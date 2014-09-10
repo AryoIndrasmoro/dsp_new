@@ -754,7 +754,7 @@ class stock_move(osv.osv):
                     cost_component_each_item = total_credit / (qty) or 0.0                    
                     result_jkt_cost = product.base_cost + cost_component_each_item
                     if product.real_price == 0:
-                        real_price = product.suggest_price
+                        real_price = result_jkt_cost + (result_jkt_cost * (product.margin/ 100))
                     else:
                         real_price = product.real_price
                     print "jkt_cost ", product.jkt_cost,product.base_cost, cost_component_each_item                                         
