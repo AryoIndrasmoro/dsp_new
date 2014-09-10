@@ -240,6 +240,11 @@
                         <!-- The History page becomes visible as soon as there is something to display inside -->
                         <page string="History" name="page_history" invisible="True">
                         </page>
+                        <page string="Bypass Order Confirmation" name="bypass">
+                        	<group>
+                        		<field name="bypass_order" string="Bypass Order" group="group_partner_manager"/>
+                        	</group>
+                        </page>
                     </notebook>
                 </sheet>
                 </form>

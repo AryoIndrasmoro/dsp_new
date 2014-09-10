@@ -48,7 +48,8 @@ This module covers: test
         'view/sale_crm_view.xml',
         'view/stock_view.xml',
         'view/purchase_view.xml',        
-        'view/sale_view.xml',        
+        'view/sale_view.xml',
+        'view/res_security.xml',         
         'report/sale_report_view.xml',
         'stock_view_report.xml',               
         

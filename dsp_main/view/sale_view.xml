@@ -26,7 +26,7 @@
         		<field name="partner_shipping_id" position="after">
             		<field name="sale_type"/>
                 </field>     
-                           
+                                        		
 				<page string="Other Information" groups="base.group_user" position="after">
 			  		<page string="Quotation Confirmation">
 			  			<group>
@@ -44,6 +44,8 @@
 			  		</page>
 				</page>
 			      
+			    
+        		
         		<xpath expr="//form/sheet/notebook/page[@string='Order Lines']/field[@name='order_line']/form/group/group[1]/field[@name='price_unit']" position="attributes">
         			<attribute name="groups">base.group_erp_manager</attribute>
         		</xpath>	

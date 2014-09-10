@@ -30,10 +30,12 @@ class res_partner(osv.osv):
         'discount': fields.selection([(5, '5'),(10,'10'),(15,'15'),(20,'20'),(25,'25'),(30,'30') ], 'Incentive Discount (%)'),
         'dsp_price_list_id' : fields.selection([('standard', 'Suggest Price'), ('real', 'Real Price'), ('outlet', 'Outlet Price')], 'DSP Price List', invisible="1"),
         'outlet_margin'     : fields.float('Outlet Margin (%)', digits_compute=dp.get_precision('Product Price')),
+        'bypass_order'      : fields.boolean('Bypass Order', help="Check this box if this this outlet allowed to order in outstanding payment status"),
     }
     
     _defaults = {
             'dsp_price_list_id' : 'standard',
+            'bypass_order'      : False,
                  }
 
 res_partner()

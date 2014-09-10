@@ -1,6 +1,8 @@
 from openerp.osv import fields,osv
 import pdb
 import pprint
+import time
+from datetime import datetime
 
 class sale_order(osv.osv):
     _inherit = "sale.order"
@@ -64,6 +66,53 @@ class sale_order(osv.osv):
                     ], 'Status', readonly=True, track_visibility='onchange',
                     help="Gives the status of the quotation or sales order. \nThe exception status is automatically set when a cancel operation occurs in the processing of a document linked to the sales order. \nThe 'Waiting Schedule' status is set when the invoice is confirmed but waiting for the scheduler to run on the order date.", select=True),    
             }
+    
+    def create(self, cr, uid, vals, context=None):
+        ##############ARYA Payment Alert###############
+        
+        fmt = '%Y-%m-%d'
+        #date_today = lambda self,cr,uid,context={}: context.get('date', fields.date.context_today(self,cr,uid,context=context))
+        date_today = time.strftime('%Y-%m-%d')
+        res_partner = self.pool.get('res.partner')
+        partner_id = vals['partner_id']
+        partner_obj = self.pool.get('res.partner').browse(cr, uid, partner_id, context=None)        
+        partner_bypass = partner_obj.bypass_order
+        
+        # check if there's still any open Invoice        
+        invoice_search  = self.pool.get('account.invoice').search(cr, uid, [('partner_id','=',partner_id), ('state','=','open')], context=None)        
+        # Get the list of open invoice                
+        invoice_obj = self.pool.get('account.invoice').browse(cr, uid, invoice_search, context=None)
+        # check due date of every single open invoice if there's any of them
+        
+        #=======================================================================
+        # if invoice_obj:
+        #     for inv in invoice_obj:                
+        #         d1 = datetime.strptime(date_today, fmt)
+        #         d2 = datetime.strptime(inv.date_due, fmt)                
+        #         daysDiff = int((d1-d2).days) 
+        #                         
+        #         if daysDiff >= 0:  
+        #             print daysDiff                  
+        #             if partner_bypass == False:                                                
+        #                 raise osv.except_osv(('Outstanding Payment!'),('You cannot save if outlet have outstanding payment!'))
+        #             elif partner_bypass == True:
+        #                 res_partner.write(cr, uid, partner_id, {'bypass_order' : False})
+        #         else:
+        #             print "out"
+        #=======================================================================
+        
+        if invoice_obj:                
+            if partner_bypass == False:                                                
+                raise osv.except_osv(('Outstanding Payment!'),('You cannot save if outlet have outstanding payment!'))
+            elif partner_bypass == True:
+                res_partner.write(cr, uid, partner_id, {'bypass_order' : False})
+        else:
+            print "out"
+                                                                                                                                                                
+        ###############################################
+        if vals.get('name','/')=='/':
+            vals['name'] = self.pool.get('ir.sequence').get(cr, uid, 'sale.order') or '/'
+        return super(sale_order, self).create(cr, uid, vals, context=context)
     
 #===============================================================================
 #     def create(self, cr, uid, vals, context=None):
