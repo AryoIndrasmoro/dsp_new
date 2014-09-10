@@ -39,7 +39,8 @@ class sale_order(osv.osv):
             'company_id': order.company_id.id,
             'sale_warehouse' : order.shop_id.name,
             'consignment' : sale_type,
-            'sales_person' : current_user.name,            
+            'sales_person' : current_user.name,   
+            'price_unit'    : 100,         
         }
         
     _columns ={
