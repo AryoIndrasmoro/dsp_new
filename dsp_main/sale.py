@@ -90,7 +90,7 @@ class sale_order(osv.osv):
         #         d1 = datetime.strptime(date_today, fmt)
         #         d2 = datetime.strptime(inv.date_due, fmt)                
         #         daysDiff = int((d1-d2).days) 
-        #                         
+        #                          
         #         if daysDiff >= 0:  
         #             print daysDiff                  
         #             if partner_bypass == False:                                                
@@ -166,7 +166,8 @@ class sale_order(osv.osv):
     
     _defaults = {
             'dsp_price_list_id' : 'real',
-            'sale_type' : 'Outlet (Direct Selling)',            
+            'sale_type' : 'Outlet (Direct Selling)',  
+            'order_policy' : 'On Demand',          
                  }
       
 sale_order()
