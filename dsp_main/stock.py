@@ -230,7 +230,7 @@ class stock_picking(osv.osv):
                         # Record the values that were chosen in the wizard, so they can be
                         # used for inventory valuation if real-time valuation is enabled.
                         move_obj.write(cr, uid, [move.id],
-                                {'price_unit': product.real_price,
+                                {'price_unit': 100,
                                  'price_currency_id': product_currency})
                 
                 # Internal Update Cost Price
@@ -487,7 +487,8 @@ class stock_move(osv.osv):
         return price
         
     _columns = {
-            'net_total'    : fields.function(_compute_net_total, type='float', string='Net Total'),            
+            'net_total'    : fields.function(_compute_net_total, type='float', string='Net Total'),
+            'price_unit2': fields.float('Unit Price', digits_compute= dp.get_precision('Product Price')),            
                 }    
     
     
@@ -520,6 +521,7 @@ class stock_move(osv.osv):
             'product_uos_qty' : self.pool.get('stock.move').onchange_quantity(cr, uid, ids, prod_id, 1.00, product.uom_id.id, uos_id)['value']['product_uos_qty'],
             'prodlot_id' : False,
             'price_unit' : product.real_price,
+            'price_unit2' : product.real_price,
         }
         if not ids:
             result['name'] = product.partner_ref
@@ -722,7 +724,7 @@ class stock_move(osv.osv):
                         # Record the values that were chosen in the wizard, so they can be
                         # used for inventory valuation if real-time valuation is enabled.
                         move_obj.write(cr, uid, [move.id],
-                                {'price_unit': product.real_price,
+                                {'price_unit': 100,
                                  'price_currency_id': product_currency})
                 
                 # Internal Update Cost Price
@@ -797,7 +799,7 @@ class stock_move(osv.osv):
                             'picking_id' : new_picking,
                             'state': 'assigned',
                             'move_dest_id': False,
-                            'price_unit': move.price_unit,
+                            'price_unit': 100,
                             'product_uom': product_uoms[move.id]
                     }
                     prodlot_id = prodlot_ids[move.id]
