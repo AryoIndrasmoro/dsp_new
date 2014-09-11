@@ -105,8 +105,11 @@
 			 <field name="model">stock.picking.out</field>
 			 <field name="inherit_id" ref="stock.view_picking_form"/>
 			 <field name="arch" type="xml">			 		
+			 	<field name="partner_id" position="after">
+			 		<field name="sale_id"/>
+			 	</field>
 			 	<xpath expr="/form/sheet/notebook/page/group/group/field[@name='move_type']" position="replace">	 		
-		    		<field name="move_type" readonly="1"/>
+		    		<field name="move_type" readonly="1"/>		    		
 				</xpath>
 			  	<xpath expr="//field[@name='partner_id']" position="replace">
 			   		<field name="partner_id" on_change="onchange_partner_in(partner_id)" string="Outlet/Customer" domain="[('customer','=',True)]" />			   		
@@ -190,8 +193,9 @@
 			 <field name="inherit_id" ref="stock.view_move_picking_form"/>
 			 <field name="arch" type="xml">
 			 	<field name="product_id" position="after">
-			 		<field name="price_unit" readonly="1"/>
-			 		<field name="net_total" readonly="1"/>
+			 		<field name="price_unit_view"/>
+			 		<field name="price_unit" invisible="1"/>
+			 		<field name="net_total" readonly="1"/>			 		
 			 	</field>   	  
 			 </field>
 			</record>
@@ -202,7 +206,8 @@
 		 <field name="inherit_id" ref="stock.view_move_picking_tree"/>
 		 <field name="arch" type="xml">
 		 	<field name="product_qty" position="after">
-		 		<field name="price_unit2" invisible="1"/>
+		 		<field name="price_unit_view" required="1"/>
+		 		<field name="price_unit" invisible="1"/>
 		 	</field>   	  
 		 </field>
 		</record>

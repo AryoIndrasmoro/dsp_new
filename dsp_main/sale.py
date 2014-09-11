@@ -7,7 +7,7 @@ from datetime import datetime
 class sale_order(osv.osv):
     _inherit = "sale.order"
     _description = "Sales Order Inherit DSP"
-    
+            
     def action_confirm_quotation(self, cr, uid, ids, context=None):        
         return self.write(cr, uid, ids, {'state': 'quotation_confirm'})        
     
@@ -39,8 +39,7 @@ class sale_order(osv.osv):
             'company_id': order.company_id.id,
             'sale_warehouse' : order.shop_id.name,
             'consignment' : sale_type,
-            'sales_person' : current_user.name,   
-            'price_unit'    : 100,         
+            'sales_person' : current_user.name,                   
         }
         
     _columns ={
@@ -102,13 +101,23 @@ class sale_order(osv.osv):
         date_today = time.strftime('%Y-%m-%d')
         res_partner = self.pool.get('res.partner')
         partner_id = vals['partner_id']
-        partner_obj = self.pool.get('res.partner').browse(cr, uid, partner_id, context=None)        
+        partner_obj = self.pool.get('res.partner').browse(cr, uid, partner_id, context=None)                                    
         partner_bypass = partner_obj.bypass_order
         
-        # check if there's still any open Invoice        
-        invoice_search  = self.pool.get('account.invoice').search(cr, uid, [('partner_id','=',partner_id), ('state','=','open')], context=None)        
+        # check if there's still any open Invoice            
+        invoice_search1  = self.pool.get('account.invoice').search(cr, uid, [('state','=','open')], context=None)        
+        invoice_search  = self.pool.get('account.invoice').search(cr, uid, [('partner_id','=',partner_id), ('state','=','open')], context=None)            
         # Get the list of open invoice                
         invoice_obj = self.pool.get('account.invoice').browse(cr, uid, invoice_search, context=None)
+        invoice_obj1 = self.pool.get('account.invoice').browse(cr, uid, invoice_search1, context=None)
+        for inv in invoice_obj1:
+            print "aaaaaaaaaaaaaaaaaaaaaA", inv.partner_id.parent_id.id,partner_id
+            if inv.partner_id.parent_id.id == partner_id:
+                if partner_bypass == False:                                                
+                    raise osv.except_osv(('Outstanding Payment!'),('You cannot save if outlet have outstanding payment!'))
+                elif partner_bypass == True:
+                    res_partner.write(cr, uid, partner_id, {'bypass_order' : False})
+                            
         # check due date of every single open invoice if there's any of them
         
         #=======================================================================
@@ -128,13 +137,15 @@ class sale_order(osv.osv):
         #             print "out"
         #=======================================================================
         
-        if invoice_obj:                
-            if partner_bypass == False:                                                
-                raise osv.except_osv(('Outstanding Payment!'),('You cannot save if outlet have outstanding payment!'))
-            elif partner_bypass == True:
-                res_partner.write(cr, uid, partner_id, {'bypass_order' : False})
-        else:
-            print "out"
+        #=======================================================================
+        # if invoice_obj:                
+        #     if partner_bypass == False:                                                
+        #         raise osv.except_osv(('Outstanding Payment!'),('You cannot save if outlet have outstanding payment!'))
+        #     elif partner_bypass == True:
+        #         res_partner.write(cr, uid, partner_id, {'bypass_order' : False})
+        # else:
+        #     print "out"
+        #=======================================================================
                                                                                                                                                                 
         ###############################################
         if vals.get('name','/')=='/':
@@ -366,7 +377,7 @@ class sale_order_line(osv.osv):
             for line in move_line:
                 if line.name == product.name:
                     result = {'value': {
-                        'price_unit' : line.price_unit,                            
+                        'price_unit' : line.price_unit_view,                            
                         }
                     }                        
                 else:
