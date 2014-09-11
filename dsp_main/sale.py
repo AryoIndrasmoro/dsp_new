@@ -43,6 +43,7 @@ class sale_order(osv.osv):
         }
         
     _columns ={
+               'payment_term'       : fields.many2one('account.payment.term', 'Payment Term', required = True),
                'partner_id'         : fields.many2one('res.partner', 'Outlet/Customer', readonly=True, states={'draft': [('readonly', False)], 'sent': [('readonly', False)]}, required=True, change_default=True, select=True, track_visibility='always'),
                'sale_type'          : fields.selection([('Promo', 'Promo'), ('Consignment', 'Consignment'),('Outlet (Direct Selling)','Outlet (Direct Selling)') ], 'Sale Type'),
                'person_name'        : fields.char('Person Name', size=128),
