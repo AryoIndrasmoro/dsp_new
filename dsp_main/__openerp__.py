@@ -50,7 +50,8 @@ This module covers: test
         'view/purchase_view.xml',        
         'view/sale_view.xml',                
         'report/sale_report_view.xml',
-        'stock_view_report.xml',               
+        'stock_view_report.xml',      
+        'invoice_view_report.xml',
         
     ],
     #'update_xml': ['sale_analysis_report.xml'],

@@ -91,7 +91,7 @@ class sale_order(osv.osv):
             'state': 'draft',
             #'state': 'waiting',
             'company_id': order.company_id.id,
-            'price_unit': line.product_id.standard_price or 0.0
+            'price_unit': line.price_unit
         }
         
     def create(self, cr, uid, vals, context=None):

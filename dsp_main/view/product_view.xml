@@ -42,8 +42,7 @@
 				                    <field name="margin" class="oe_inline"/> percent
 			                	</div>			                
 		                		<field name="suggest_price"/>
-		                		<field name="real_price"/>
-		                		<field name="standard_price"/>		                				                	
+		                		<field name="real_price"/>		                		                				                
 		                	</group>
 	                	</group>               
 	                </page>

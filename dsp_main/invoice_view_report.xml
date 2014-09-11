@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<openerp>
+	<data>
+		
+		<report 
+			id="invoice_item_form" string="Invoice Form" model="account.invoice"
+			name="invoice.item.form" 
+			file="dsp_main/report/invoice_item_form.rml"			
+			auto="False"
+			header="False"
+			
+			/>
+			
+	</data>
+</openerp>
