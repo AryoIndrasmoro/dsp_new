@@ -51,7 +51,7 @@ class sale_order(osv.osv):
                'person_name_order'    : fields.char('Person Name', size=128),
                'date_confirmed_order' : fields.date('Input Date'),
                'file_confirmed_order' : fields.binary('Sales Order File'),
-               'dsp_price_list_id': fields.selection([('real', 'Real Price'), ('outlet', 'Outlet Price')], 'DSP Price List'),
+               'dsp_price_list_id': fields.selection([('Real Price', 'Real Price'), ('Outlet Price', 'Outlet Price')], 'DSP Price List'),
                'state': fields.selection([
                     ('draft', 'Draft Quotation'),
                     ('sent', 'Quotation Sent'),
@@ -195,7 +195,7 @@ class sale_order(osv.osv):
             'user_id': dedicated_salesman,
             'dsp_price_list_id' : dsp_price_list_id, 
             'sale_type' : 'Outlet (Direct Selling)',
-            'dsp_price_list_id' : 'real',
+            'dsp_price_list_id' : 'Real Price',
         }
         if pricelist:
             val['pricelist_id'] = pricelist
@@ -203,7 +203,7 @@ class sale_order(osv.osv):
     
     
     _defaults = {
-            'dsp_price_list_id' : 'real',
+            'dsp_price_list_id' : 'Real Price',
             'sale_type' : 'Outlet (Direct Selling)',  
             'order_policy' : 'On Demand',          
                  }
@@ -347,9 +347,9 @@ class sale_order_line(osv.osv):
         print partner_id.outlet_margin
         print product.real_price        
                 
-        if price_list == 'real':
+        if price_list == 'Real Price':
             price_unit = product.real_price
-        elif price_list == 'outlet':
+        elif price_list == 'Outlet Price':
             price_unit = product.jkt_cost + (product.jkt_cost * partner_id.outlet_margin/ 100)
         
         print price_unit

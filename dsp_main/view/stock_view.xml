@@ -31,7 +31,8 @@
 		    		<field name="move_type" readonly="1"/>
 				</xpath>
 				<xpath expr="/form/sheet/group/group[1]/field[@name='stock_journal_id']" position="after">
-		    		<field name="additional_cost_int" required="1"/>
+		    		<field name="additional_cost_int" required="1"
+		    			attrs="{'invisible':[('internal_move_type', '!=', 'overseas')]}"/>
 		    	</xpath>
 		    
 				<xpath expr="/form/sheet/notebook/page[@string='Additional Info']" position="after">

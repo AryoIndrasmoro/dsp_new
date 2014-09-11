@@ -25,7 +25,7 @@ class stock_picking(osv.osv):
             'file_confirmed'        : fields.binary('Delivery Slip before Deliver'),
             'notes_picking'         : fields.text('Delivery Notes'),
             'additional_cost_int'   : fields.selection([('no','Without Cost Component'), ('yes','With Cost Component')], 'Cost Component', readonly=False),
-            'internal_move_type'    : fields.selection([('regular','Regular'), ('consignment','Consignment')], 'Move Type'),
+            'internal_move_type'    : fields.selection([('overseas','Overseas'), ('regular','Regular'), ('consignment','Consignment')], 'Move Type'),
             'person_name_ex'        : fields.char('Person Name', size=128),
             'date_confirmed_ex'     : fields.date('Input Date'),
             'file_confirmed_ex'     : fields.binary('Delivery Slip after Deliver'),
@@ -235,7 +235,7 @@ class stock_picking(osv.osv):
                                  'price_currency_id': product_currency})
                 
                 # Internal Update Cost Price
-                elif (pick.type == 'internal') and (move.product_id.cost_method == 'average'):                                                       
+                elif (pick.type == 'internal') and (move.product_id.cost_method == 'average') and (pick.internal_move_type == 'overseas'):                                                       
                     product = product_obj.browse(cr, uid, move.product_id.id)
                     #move_currency_id = move.company_id.currency_id.id
                     #context['currency_id'] = move_currency_id
