@@ -478,10 +478,12 @@ cost_component()
 class stock_move(osv.osv):    
     _inherit = "stock.move"
     
-    def _compute_net_total(self, cr, uid, ids):        
-        for line in self.browse(cr, uid, ids):
-            price = line.price_unit                        
-        return price
+    #===========================================================================
+    # def _compute_net_total(self, cr, uid, ids):        
+    #     for line in self.browse(cr, uid, ids):
+    #         price = line.price_unit                        
+    #     return price
+    #===========================================================================
     
     def _compute_sub_total(self, cr, uid, ids, price_unit, qty):                
         price = price_unit * qty                        
@@ -489,7 +491,7 @@ class stock_move(osv.osv):
         
     _columns = {
             #'price_unit': fields.float('Unit Price', store=True, digits_compute= dp.get_precision('Product Price'), help="Technical field used to record the product cost set by the user during a picking confirmation (when average price costing method is used)"),
-            'net_total'    : fields.function(_compute_net_total, type='float', string='Net Total'),
+            'net_total'    : fields.float('Unit Price', digits_compute= dp.get_precision('Product Price')),
             'price_unit2': fields.float('Unit Price', digits_compute= dp.get_precision('Product Price')),            
             'price_unit_view': fields.related('price_unit', type='float', string='Unit Price', readonly=True),
                 }    
