@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <openerp>
-    <data>
+    <data>    	
 	    <record id="product_normal_form_view_inherit" model="ir.ui.view">
 			<field name="name">product.normal.form.inherit</field>
 			<field name="model">product.product</field>
@@ -26,6 +26,10 @@
 								<field name="volume_l"/>
 								<field name="volume_alcohol"/>
 							</group>										
+							<group>
+								<field name="brand"/>
+								<field name="foc"/>
+							</group>
 						</group>
 					</page>
 				</page>				
@@ -46,7 +50,7 @@
 		                	</group>
 	                	</group>               
 	                </page>
-	            </xpath>
+	            </xpath>	            
 			</field>			
 		</record>		
 	    
@@ -73,7 +77,7 @@
                 </div>       	                	
                 <field name="name" position="after">
 	            	<t t-if="record.vintages.raw_value"> - <field name="vintages"/></t> 
-	            </field>	                            
+	            </field>	                            	            
 				<ul position="inside">                    
                     <li t-if="record.type.raw_value != 'service'">SG Cost: <field name="base_cost"/></li>
                     <li t-if="record.type.raw_value != 'service'">JKT Cost: <field name="jkt_cost"/></li>
@@ -88,22 +92,25 @@
             <field name="model">product.product</field>
             <field name="inherit_id" ref="product.product_product_tree_view"/>
             <field name="arch" type="xml">
-                <field name="standard_price" position="after">                	
-                	<field name="base_cost"/>
-                	<field name="jkt_cost"/>
-                	<field name="margin"/>
-                	<field name="suggest_price"/>
-                	<field name="real_price"/>               
+                <field name="name" position="after">                	
+                	<field name="vintages"/>                	
+                	<field name="country_id"/>
+                	<field name="region_id"/>
+                	<field name="grape_id"/>
+                	<field name="type_id"/>
+                	<field name="volume_l"/>
+                	<field name="volume_alcohol"/>
+                	<field name="appelation_id"/>
+                	<field name="brand"/>
+                	<field name="classification"/>
+                	<field name="foc"/>                	           
                 </field>         
                 <field name="standard_price" position="replace">
                 	<field name="standard_price" invisible='1'/>                	              
                 </field>
                 <field name="lst_price" position="replace">
                 	<field name="lst_price" invisible='1'/>                	              
-                </field>
-                <field name="name" position="after">
-	        		<field name="vintages" />
-	        	</field>
+                </field>                
             </field>
        	</record>
 		
@@ -143,13 +150,89 @@
             <field name="inherit_id" ref="product.product_product_tree_view"/>
             <field name="arch" type="xml">   
 				<tree position="attributes">
-    				<attribute name="colors">orange:suggest_price != real_price;red:virtual_available&lt;0;blue:virtual_available&gt;=0 and state in ('draft', 'end', 'obsolete');black:virtual_available&gt;=0 and state not in ('draft', 'end', 'obsolete')</attribute>
+    				<attribute name="colors">red:virtual_available&lt;0;blue:virtual_available&gt;=0 and state in ('draft', 'end', 'obsolete');black:virtual_available&gt;=0 and state not in ('draft', 'end', 'obsolete')</attribute>
 				</tree>            	                              
 				<field name="default_code" position="replace">
 					<field name="default_code" invisible="1"/>
 				</field>
+				<field name="state" position="replace">
+					<field name="state" invisible="1"/>
+				</field>
             </field>
+        </record>       
+        
+        <record id="product_product_list_tree_view" model="ir.ui.view">
+            <field name="name">product.product.list.tree</field>
+            <field name="model">product.template</field>      
+            <field name="inherit_id" ref="product.product_template_tree_view"/>
+            <field name="arch" type="xml">            	 
+            	<field name="name" position="after">            		
+            		<field name="base_cost"/>
+            		<field name="jkt_cost"/>
+            		<field name="margin"/>
+            		<field name="suggest_price"/>
+            		<field name="real_price"/>            		
+            	</field>                      
+            	<field name="categ_id" position="replace">
+            		<field name="categ_id" invisible="1"/>
+            	</field>                  		
+            	<field name="type" position="replace">
+            		<field name="type" invisible="1"/>
+            	</field>
+            	<field name="state" position="replace">
+            		<field name="state" invisible="1"/>
+            	</field>
+            	<tree position="attributes">
+    				<attribute name="colors">orange:suggest_price != real_price</attribute>
+				</tree>
+            </field>
+       	</record>
+       	
+       	<record id="product_list_search_form_view" model="ir.ui.view">
+            <field name="name">product.list.search.form</field>
+            <field name="model">product.template</field>            
+            <field name="arch" type="xml">
+            	<search string="Products">
+            		<group string="Filter">
+            			<field name="name" string="Product Name" filter_domain="[('name','ilike',self)]"/>
+            			<field name="name" string="Vintages" filter_domain="[('vintages','ilike',self)]"/>
+            			<field name="name" string="Country" filter_domain="[('country_id','ilike',self)]"/>
+            			<field name="name" string="Region" filter_domain="[('region_id','ilike',self)]"/>
+            			<field name="name" string="Grape" filter_domain="[('grape_id','ilike',self)]"/>
+            			<field name="name" string="Type" filter_domain="[('type_id','ilike',self)]"/>
+            			<field name="name" string="Appelation" filter_domain="[('appelation_id','ilike',self)]"/>
+            			<field name="name" string="Brand" filter_domain="[('brand','ilike',self)]"/>
+            			<field name="name" string="Classification" filter_domain="[('classification','ilike',self)]"/>
+            		</group>
+					<group string="Group By..">
+						<filter string='Vintage' icon="terp-stock_symbol-selection" domain="[]" context="{'group_by' : 'vintages'}"/>
+						<filter string='Country' icon="terp-stock_symbol-selection" domain="[]" context="{'group_by' : 'country_id'}"/>
+						<filter string='Region' icon="terp-stock_symbol-selection" domain="[]" context="{'group_by' : 'region_id'}"/>
+						<filter string='Brand' icon="terp-stock_symbol-selection" domain="[]" context="{'group_by' : 'brand'}"/>
+						<filter string='Type' icon="terp-stock_symbol-selection" domain="[]" context="{'group_by' : 'type_id'}"/>
+						<filter string='Appelation' icon="terp-stock_symbol-selection" domain="[]" context="{'group_by' : 'appelation_id'}"/>
+						<filter string='Classification' icon="terp-stock_symbol-selection" domain="[]" context="{'group_by' : 'classification'}"/>
+						<filter string='Grape' icon="terp-stock_symbol-selection" domain="[]" context="{'group_by' : 'grape_id'}"/>
+						<filter string='Volume L' icon="terp-stock_symbol-selection" domain="[]" context="{'group_by' : 'volume_l'}"/>
+						<filter string='Volume Alcohol' icon="terp-stock_symbol-selection" domain="[]" context="{'group_by' : 'volume_alcohol'}"/>
+						<filter string='FOC' icon="terp-stock_symbol-selection" domain="[]" context="{'group_by' : 'foc'}"/>
+					</group>            		
+            	</search>            	
+            </field>            	
         </record>
-        			       
+                 
+    	<record id="product_list_action" model="ir.actions.act_window">
+            <field name="name">Product List</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="res_model">product.template</field>
+            <field name="view_mode">tree</field>
+            <field name="view_type">tree</field>                       
+            <field name="view_id" ref="product.product_template_tree_view"/>
+            <field name="search_view_id" ref="product_list_search_form_view"/>                        
+        </record>
+        
+    	<menuitem action="product_list_action" 
+    		id="menu_product_list" parent="base.menu_product" sequence="1"/>
+    				       
     </data>
 </openerp>

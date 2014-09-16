@@ -3,6 +3,16 @@ import pdb
 import pprint
 import time
 from datetime import datetime
+import openerp.addons.decimal_precision as dp
+
+class sale_shop(osv.osv):
+    
+    _inherit = "sale.shop"    
+    _columns = {
+            'outlet'       : fields.many2one('res.partner', 'Outlet/Customer', domain=[('customer', '=', True)]),                        
+                }
+                    
+sale_shop()
 
 class sale_order(osv.osv):
     _inherit = "sale.order"
@@ -20,7 +30,7 @@ class sale_order(osv.osv):
         
         if sale_type == 'Consignment':
             sale_type = 'Consignment'
-        elif sale_type == 'Outlet (Direct Selling)':
+        elif sale_type == 'Direct Selling':
             sale_type = 'Direct Selling'
         else:
             sale_type = 'Promo'            
@@ -45,14 +55,14 @@ class sale_order(osv.osv):
     _columns ={
                'payment_term'       : fields.many2one('account.payment.term', 'Payment Term', required = True),
                'partner_id'         : fields.many2one('res.partner', 'Outlet/Customer', readonly=True, states={'draft': [('readonly', False)], 'sent': [('readonly', False)]}, required=True, change_default=True, select=True, track_visibility='always'),
-               'sale_type'          : fields.selection([('Promo', 'Promo'), ('Consignment', 'Consignment'),('Outlet (Direct Selling)','Outlet (Direct Selling)') ], 'Sale Type'),
+               'sale_type'          : fields.selection([('Promo', 'Promo'), ('Consignment', 'Consignment'),('Direct Selling','Direct Selling') ], 'Sale Type'),
                'person_name'        : fields.char('Person Name', size=128),
                'date_confirmed'     : fields.date('Input Date'),
                'file_confirmed'     : fields.binary('Quotation File'),
                'person_name_order'    : fields.char('Person Name', size=128),
                'date_confirmed_order' : fields.date('Input Date'),
                'file_confirmed_order' : fields.binary('Sales Order File'),
-               'dsp_price_list_id': fields.selection([('Real Price', 'Real Price'), ('Outlet Price', 'Outlet Price')], 'DSP Price List'),
+               'dsp_price_list_id': fields.selection([('Real Price', 'Real Price'), ('Outlet Price', 'Outlet Price')], 'DSP Price List'),                              
                'state': fields.selection([
                     ('draft', 'Draft Quotation'),
                     ('sent', 'Quotation Sent'),
@@ -91,7 +101,8 @@ class sale_order(osv.osv):
             'state': 'draft',
             #'state': 'waiting',
             'company_id': order.company_id.id,
-            'price_unit': line.price_unit
+            'price_unit': line.price_unit,
+            'price_unit_view': line.price_unit,
         }
         
     def create(self, cr, uid, vals, context=None):
@@ -106,37 +117,35 @@ class sale_order(osv.osv):
         partner_bypass = partner_obj.bypass_order
         
         # check if there's still any open Invoice            
-        invoice_search1  = self.pool.get('account.invoice').search(cr, uid, [('state','=','open')], context=None)        
-        invoice_search  = self.pool.get('account.invoice').search(cr, uid, [('partner_id','=',partner_id), ('state','=','open')], context=None)            
-        # Get the list of open invoice                
+        invoice_search  = self.pool.get('account.invoice').search(cr, uid, [('state','=','open')], context=None)                            
+        # Get the list of open invoice                        
         invoice_obj = self.pool.get('account.invoice').browse(cr, uid, invoice_search, context=None)
-        invoice_obj1 = self.pool.get('account.invoice').browse(cr, uid, invoice_search1, context=None)
-        for inv in invoice_obj1:
-            print "aaaaaaaaaaaaaaaaaaaaaA", inv.partner_id.parent_id.id,partner_id
-            if inv.partner_id.parent_id.id == partner_id:
-                if partner_bypass == False:                                                
-                    raise osv.except_osv(('Outstanding Payment!'),('You cannot save if outlet have outstanding payment!'))
-                elif partner_bypass == True:
-                    res_partner.write(cr, uid, partner_id, {'bypass_order' : False})
-                            
-        # check due date of every single open invoice if there's any of them
         
         #=======================================================================
-        # if invoice_obj:
-        #     for inv in invoice_obj:                
-        #         d1 = datetime.strptime(date_today, fmt)
-        #         d2 = datetime.strptime(inv.date_due, fmt)                
-        #         daysDiff = int((d1-d2).days) 
-        #                          
-        #         if daysDiff >= 0:  
-        #             print daysDiff                  
-        #             if partner_bypass == False:                                                
-        #                 raise osv.except_osv(('Outstanding Payment!'),('You cannot save if outlet have outstanding payment!'))
-        #             elif partner_bypass == True:
-        #                 res_partner.write(cr, uid, partner_id, {'bypass_order' : False})
-        #         else:
-        #             print "out"
+        # for inv in invoice_obj1:            
+        #     if inv.partner_id.parent_id.id == partner_id:
+        #         if partner_bypass == False:                                                
+        #             raise osv.except_osv(('Outstanding Payment!'),('You cannot save if outlet have outstanding payment!'))
+        #         elif partner_bypass == True:
+        #             res_partner.write(cr, uid, partner_id, {'bypass_order' : False})
         #=======================================================================
+                            
+        # check due date of every single open invoice if there's any of them        
+        if invoice_obj:
+            for inv in invoice_obj:       
+                if inv.partner_id.parent_id.id == partner_id:         
+                    d1 = datetime.strptime(date_today, fmt)
+                    d2 = datetime.strptime(inv.date_due, fmt)                
+                    daysDiff = int((d1-d2).days) 
+                                      
+                    if daysDiff >= 0:  
+                        print daysDiff                  
+                        if partner_bypass == False:                                                
+                            raise osv.except_osv(('Outstanding Payment!'),('You cannot save if outlet have outstanding payment!'))
+                        elif partner_bypass == True:
+                            res_partner.write(cr, uid, partner_id, {'bypass_order' : False})
+                    else:
+                        print "out"
         
         #=======================================================================
         # if invoice_obj:                
@@ -149,6 +158,10 @@ class sale_order(osv.osv):
         #=======================================================================
                                                                                                                                                                 
         ###############################################
+        
+        for n in range(len(vals.get('order_line'))):
+            fee = vals['order_line'][n][2]['fee']                    
+
         if vals.get('name','/')=='/':
             vals['name'] = self.pool.get('ir.sequence').get(cr, uid, 'sale.order') or '/'
         return super(sale_order, self).create(cr, uid, vals, context=context)
@@ -175,7 +188,8 @@ class sale_order(osv.osv):
 #         return super(sale_order, self).write(cr, uid, ids, vals, context=context)                                
 #===============================================================================    
     
-    def onchange_partner_id(self, cr, uid, ids, part, context=None):
+    def onchange_partner_id_dsp(self, cr, uid, ids, sale_type, part, context=None):
+        shop_default = ''        
         if not part:
             return {'value': {'partner_invoice_id': False, 'partner_shipping_id': False,  'payment_term': False, 'fiscal_position': False}}
 
@@ -184,41 +198,98 @@ class sale_order(osv.osv):
         pricelist = part.property_product_pricelist and part.property_product_pricelist.id or False
         payment_term = part.property_payment_term and part.property_payment_term.id or False
         fiscal_position = part.property_account_position and part.property_account_position.id or False
-        dedicated_salesman = part.user_id and part.user_id.id or uid
+        dedicated_salesman = part.user_id and part.user_id.id or uid        
         
-        dsp_price_list_id = part.dsp_price_list_id
-        
-        val = {
-            'partner_invoice_id': addr['invoice'],
-            'partner_shipping_id': addr['delivery'],
-            'payment_term': payment_term,
-            'fiscal_position': fiscal_position,
-            'user_id': dedicated_salesman,
-            'dsp_price_list_id' : dsp_price_list_id, 
-            'sale_type' : 'Outlet (Direct Selling)',
-            'dsp_price_list_id' : 'Real Price',
-        }
+        partner_name = part.name            
+        if sale_type == 'Consignment':                           
+            shop_id = self.pool.get('sale.shop').search(cr, uid, [('outlet','=',partner_name)], context=context)        
+            shop_obj = self.pool.get('sale.shop').browse(cr, uid, shop_id, context=context)
+            for shop in shop_obj:                                  
+                shop_default = shop.id        
+                                                                                                        
+            val = {
+                'partner_invoice_id': addr['invoice'],
+                'partner_shipping_id': addr['delivery'],
+                'payment_term': payment_term,
+                'fiscal_position': fiscal_position,
+                'user_id': dedicated_salesman,                                             
+                'shop_id'   : shop_default,                            
+                }
+            
+        else:                                                                                                                   
+            val = {
+                'partner_invoice_id': addr['invoice'],
+                'partner_shipping_id': addr['delivery'],
+                'payment_term': payment_term,
+                'fiscal_position': fiscal_position,
+                'user_id': dedicated_salesman,                                                         
+                }
+            
         if pricelist:
             val['pricelist_id'] = pricelist
         return {'value': val}
     
+    def onchange_sale_type(self, cr, uid, ids, sale_type, partner_id, context=None):
+        val = {}
+        order = self.pool.get('sale.order')
+        shop_id = self.pool.get('sale.shop').search(cr, uid, [('outlet','=',partner_id)], context=context)        
+        shop_obj = self.pool.get('sale.shop').browse(cr, uid, shop_id, context=context)
+        
+        if sale_type == 'Consignment':
+            shop_default = ''                                                                                                                   
+            if partner_id:                
+                for shop in shop_obj:                                        
+                    shop_default = shop.id                                                                     
+                        
+                val = {                
+                    'shop_id'   : shop_default,      
+                }        
+            else:                
+                val = {}
+                 
+        else:
+            company_id = self.pool.get('res.users').browse(cr, uid, uid, context=context).company_id.id
+            shop_ids = self.pool.get('sale.shop').search(cr, uid, [('company_id','=',company_id)], context=context)
+            if not shop_ids:
+                raise osv.except_osv(_('Error!'), _('There is no default shop for the current user\'s company!'))            
+                        
+            val = {'shop_id' : shop_ids[0]}
+                
+        return {'value': val}
     
     _defaults = {
             'dsp_price_list_id' : 'Real Price',
-            'sale_type' : 'Outlet (Direct Selling)',  
+            'sale_type' : 'Direct Selling',  
             'order_policy' : 'On Demand',          
                  }
       
 sale_order()
 
 class sale_order_line(osv.osv):
+        
+    def _amount_line(self, cr, uid, ids, field_name, arg, context=None):
+        tax_obj = self.pool.get('account.tax')
+        cur_obj = self.pool.get('res.currency')
+        res = {}
+        if context is None:
+            context = {}
+        for line in self.browse(cr, uid, ids, context=context):
+            price = (line.price_unit * (1 - (line.discount or 0.0) / 100.0)) + line.fee
+            taxes = tax_obj.compute_all(cr, uid, line.tax_id, price, line.product_uom_qty, line.product_id, line.order_id.partner_id)            
+            cur = line.order_id.pricelist_id.currency_id
+            res[line.id] = cur_obj.round(cr, uid, cur, taxes['total'])
+        return res
     
-    _inherit = "sale.order.line"
-    
+    _inherit = "sale.order.line"    
     _columns = {
-            'product_dsp_id': fields.many2one('product.product', 'Product', domain=[('sale_ok', '=', True)], change_default=True),
-            'product_id': fields.many2one('product.product', 'Product', domain=[('sale_ok', '=', True)], change_default=True, invisible=True),
-            'cons_doc': fields.many2one('stock.picking', 'Internal Moves', domain=[('type', '=', 'internal')]),
+            'product_dsp_id'    : fields.many2one('product.product', 'Product', domain=[('sale_ok', '=', True)], change_default=True),
+            'product_id'        : fields.many2one('product.product', 'Product', domain=[('sale_ok', '=', True)], change_default=True, invisible=True),
+            'cons_doc'          : fields.many2one('stock.picking', 'Internal Moves', domain=[('type', '=', 'internal')]),
+            'jkt_cost'          : fields.float('JKT Cost', digits_compute=dp.get_precision('Product Price')),
+            'profit'            : fields.float('Profit', digits_compute=dp.get_precision('Product Price')),
+            'sub_profit'        : fields.float('Sub Profit', digits_compute=dp.get_precision('Product Price')),
+            'fee'               : fields.float('Fee', digits_compute=dp.get_precision('Product Price')),
+            'price_subtotal'    : fields.function(_amount_line, string='Subtotal', digits_compute= dp.get_precision('Account')),
                 }
     
     def product_id_change(self, cr, uid, ids, pricelist, product, qty=0,
@@ -326,9 +397,12 @@ class sale_order_line(osv.osv):
                     }
         return {'value': result, 'domain': domain, 'warning': warning}
     
-    def onchange_product_dsp_id(self, cr, uid, ids, product_dsp_id, sale_type, price_list, partner_id, context=None):
+    def onchange_product_dsp_id(self, cr, uid, ids, product_dsp_id, product_uom_qty, sale_type, price_list, partner_id, context=None):
         price_unit = 0.0
         discount = 0.0        
+        stock_default = 0
+        profit = 0.0
+        sub_profit = 0.0
         if not product_dsp_id:            
             result = {'value': {
                     'product_id' : product_dsp_id,
@@ -338,27 +412,51 @@ class sale_order_line(osv.osv):
         
         partner_id = self.pool.get('res.partner').browse(cr, uid, partner_id, context=None)
         product = self.pool.get('product.template').browse(cr, uid, product_dsp_id, context=None)
+        product_product = self.pool.get('product.product').browse(cr, uid, product_dsp_id, context=None)
+        
+        if sale_type == 'Consignment':
+            stock_search  = self.pool.get('stock.picking').search(cr, uid, [('type','=','internal'),('partner_id', '=', partner_id.id)], context=None)
+                    
+            min_value = 100000000
+            for stock in stock_search:            
+                if stock < min_value:
+                    min_value = stock
+                    
+            stock_default = min_value
             
-        if sale_type == 'Promo':
-            discount = 100
-        else:
-            discount = 0                
-        
-        print product.jkt_cost
-        print partner_id.outlet_margin
-        print product.real_price        
-                
-        if price_list == 'Real Price':
-            price_unit = product.real_price
-        elif price_list == 'Outlet Price':
-            price_unit = product.jkt_cost + (product.jkt_cost * partner_id.outlet_margin/ 100)
-        
-        print price_unit
-        
+            product = self.pool.get('product.template').browse(cr, uid, product_dsp_id, context=None)                            
+            move_line = self.pool.get('stock.picking').browse(cr, uid, stock_default, context=context).move_lines
+                        
+            for line in move_line:
+                if line.name == product.name:
+                    price_unit = line.price_unit_view                                        
+                else:
+                    raise osv.except_osv(_('Warning Confirmation !'), _('This Internal moves has no line contains the product!"'))
+                    price_unit = 0
+            
+            print price_unit  
+                        
+        else:    
+            if sale_type == 'Promo':
+                discount = 100
+            else:
+                discount = 0                
+                                  
+            profit = (product.real_price - (discount * product.real_price / 100) - product.jkt_cost)
+            sub_profit = profit * product_uom_qty        
+            price_unit = product.real_price          
+            
+            if product_product.foc == True:
+                price_unit = 0  
+            
         result = {'value': {
                     'product_id' : product_dsp_id,
                     'price_unit' : price_unit,     
-                    'discount'   : discount               
+                    'discount'   : discount,
+                    'jkt_cost'   : product.jkt_cost,
+                    'profit'     : profit,
+                    'sub_profit' : sub_profit,
+                    'cons_doc'   : stock_default,                                                    
                     }
                 } 
         return result 
@@ -387,6 +485,19 @@ class sale_order_line(osv.osv):
                         'price_unit' : 0,                            
                         }
                     }                                                                           
-        return result            
+        return result
+    
+    #===========================================================================
+    # def onchange_product_uom_qty(self, cr, uid, ids, product_dsp_id, discount, product_uom_qty, context=None):                            
+    #     product = self.pool.get('product.template').browse(cr, uid, product_dsp_id, context=None)                                            
+    #     profit = (product.real_price - (discount * product.real_price / 100) - product.jkt_cost)
+    #     sub_profit = profit * product_uom_qty        
+    #     
+    #     result = {'value': {                    
+    #                 'sub_profit' : sub_profit                                                    
+    #                 }
+    #             } 
+    #     return result             
+    #===========================================================================
             
 sale_order_line()

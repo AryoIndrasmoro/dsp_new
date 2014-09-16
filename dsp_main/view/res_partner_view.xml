@@ -221,7 +221,7 @@
                                 <group>
                                     <field name="user_id"/>
                                     <field name="company_id" groups="base.group_multi_company" widget="selection"/>
-                                    <field name="discount"/>    
+                                    <field name="discount" invisible="1"/>    
                                 </group>
                                 <group>
                                     <field name="customer"/>                                    
@@ -256,11 +256,8 @@
             <field name="inherit_id" ref="product.view_partner_property_form"/>
             <field name="arch" type="xml">                		
                 <field name="property_product_pricelist" position="after">
-                	<field name="dsp_price_list_id"/>
-                	<label for="outlet_margin"/>
-	                <div>
-	                    <field name="outlet_margin" class="oe_inline"/> percent
-	                </div>
+                	<field name="dsp_price_list_id"/>                		               
+	                <field name="outlet_margin" invisible="1"/>
                	</field>            
             </field>
         </record>

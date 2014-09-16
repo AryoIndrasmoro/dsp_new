@@ -33,7 +33,7 @@ class stock_picking(osv.osv):
             'sale_ref'              : fields.many2one('sale.order', 'Sale Reference'),
             'consignment'           : fields.char('Sale Type'),
             'sale_warehouse'        : fields.char('Warehouse'),
-            'sales_person'          : fields.char('Sales Person'),
+            'sales_person'          : fields.char('Sales Person'),            
                 }                
         
     # FIXME: needs refactoring, this code is partially duplicated in stock_move.do_partial()!    

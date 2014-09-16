@@ -64,7 +64,9 @@ class product_product(osv.osv):
         'type_id': fields.many2one('product.type', 'Type', required=False, ondelete='cascade',
             help="Product Type."),   
         'appelation_id': fields.many2one('product.appelation', 'Appelation', required=False, ondelete='cascade',
-            help="Product Appelation."),                                                                
+            help="Product Appelation."),            
+        'brand': fields.char('Brand'),
+        'foc': fields.boolean('FOC'),  
                                         
     }
     
@@ -74,6 +76,19 @@ class product_product(osv.osv):
         'type'      : 'product',
     }
     
+    #===========================================================================
+    # def action_view_all_products(self, cr, uid, ids, context=None):        
+    #     return {
+    #         'type': 'ir.actions.act_window',
+    #         'name': 'Product List', 
+    #         'view_type': 'tree',
+    #         'view_mode': 'tree',
+    #         'res_model': 'product.product',            
+    #         'target': 'new',
+    #         'nodestroy' : True,
+    #     }
+    #===========================================================================
+        
     def name_get(self, cr, user, ids, context=None):
         if context is None:
             context = {}
@@ -85,10 +100,13 @@ class product_product(osv.osv):
             name = d.get('name','')
             code = d.get('default_code',False)
             vintage = d.get('vintages',False)
+            foc = d.get('foc',False)            
             if code:
                 name = '[%s] %s' % (code,name)
             if vintage:
                 name = name + ' - ' + str(vintage)
+            if foc:
+                name = name + ' - FOC'
             #else:
             #    name = name + ' - NV'
             if d.get('variants'):
@@ -107,7 +125,8 @@ class product_product(osv.osv):
                               'name': s.product_name or product.name,
                               'default_code': s.product_code or product.default_code,
                               'variants': product.variants,
-                              'vintages': product.vintages
+                              'vintages': product.vintages,
+                              'foc' : product.foc
                               }
                     result.append(_name_get(mydict))
             else:
@@ -116,7 +135,8 @@ class product_product(osv.osv):
                           'name': product.name,
                           'default_code': product.default_code,
                           'variants': product.variants,
-                          'vintages': product.vintages
+                          'vintages': product.vintages,
+                          'foc' : product.foc
                           }
                 result.append(_name_get(mydict))
         return result
@@ -145,6 +165,7 @@ class product_template(osv.osv):
     
     
     _columns = {
+            'name': fields.char('Name', size=128, required=True, translate=True, select=True, change_default=True),
             'jkt_cost'          : fields.float('JKT Cost', digits_compute=dp.get_precision('Product Price')),
             'base_cost'         : fields.float('SG Cost', digits_compute=dp.get_precision('Product Price')),
             'margin'            : fields.float('Margin (%)', digits_compute=dp.get_precision('Product Price')),
