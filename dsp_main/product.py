@@ -175,6 +175,6 @@ class product_template(osv.osv):
                 }
     
     _defaults = {        
-        'foc'   : 'reg',                    
+        'foc'   : 'Regular',                    
     }
 product_template()
