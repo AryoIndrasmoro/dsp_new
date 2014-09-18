@@ -50,13 +50,14 @@ class stock_picking(osv.osv):
         else:
             context = dict(context)
         res = {}
+        price_idr = 0.0
         move_obj = self.pool.get('stock.move')
         product_obj = self.pool.get('product.product')
         currency_obj = self.pool.get('res.currency')
         uom_obj = self.pool.get('product.uom')
         sequence_obj = self.pool.get('ir.sequence')
         wf_service = netsvc.LocalService("workflow")
-        for pick in self.browse(cr, uid, ids, context=context):
+        for pick in self.browse(cr, uid, ids, context=context):            
             new_picking = None
             print "pick type ", pick.type
             complete, too_many, too_few = [], [], []
@@ -134,7 +135,11 @@ class stock_picking(osv.osv):
                         move_pool.post(cr, uid, [move_id], context={})
             
         
-                for move in pick.move_lines:
+                for move in pick.move_lines:                                        
+                    purchase_obj_id = self.pool.get('purchase.order.line').search(cr, uid, [('order_id','=',pick.purchase_id.id),('product_id','=',move.product_id.id)])
+                    purchase_obj = self.pool.get('purchase.order.line').browse(cr, uid, purchase_obj_id, context=None)
+                    price_idr = purchase_obj[0].price_idr                        
+                                                                
                     if move.state in ('done', 'cancel'):
                         continue
                     partial_data = partial_datas.get('move%s' % (move.id), {})
@@ -170,7 +175,7 @@ class stock_picking(osv.osv):
 
                     if qty > 0:
                         new_price = currency_obj.compute(cr, uid, product_currency,
-                                move_currency_id, product_price)
+                                move_currency_id, price_idr)
                         new_price = uom_obj._compute_price(cr, uid, product_uom, new_price,
                                 product.uom_id.id)
                         #if product.qty_available <= 0:
@@ -180,12 +185,16 @@ class stock_picking(osv.osv):
                             new_std_price = new_price
                         else:
                             print "masuk 4"
-                            # Get the standard price
+                            # Get the standard price                            
                             amount_unit = product.price_get('standard_price', context=context)[product.id]
                             new_std_price = ((amount_unit * product_avail[product.id])\
-                                + (new_price * qty)) / (product_avail[product.id] + qty)
+                                + (price_idr * qty)) / (product_avail[product.id] + qty)
                             
-                            print "new price ", new_std_price
+                            print "aaaaaaaa", amount_unit
+                            print "bbbbbbbb", product_avail[product.id]
+                            print "cccccccc", qty
+                            print "dddddddd", new_price                            
+                            print "new price", new_std_price
                             # Cost Component
                             
                             if pick.additional_cost == 'yes':
@@ -206,13 +215,12 @@ class stock_picking(osv.osv):
                                 new_std_price = ((amount_unit * product_avail[product.id])\
                                     + (new_price * qty) + cost_component_each_item) / (product_avail[product.id] + qty)
                                 
-                                #print "amount_unit", amount_unit
-                                #print "product_avail", product_avail
-                                #print "new_price", new_price
-                                #print "qty", qty
-                                #print "cost_component_each_item", cost_component_each_item
-                                
-                                
+                                print "amount_unit", amount_unit
+                                print "product_avail", product_avail[product.id]
+                                print "new_price", new_price
+                                print "qty", qty           
+                                print "new_std_price", new_std_price                     
+                                                            
                                 
                                 #print "new_std_price", new_std_price    
                                                                                    

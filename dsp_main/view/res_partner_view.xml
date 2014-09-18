@@ -240,9 +240,29 @@
                         <!-- The History page becomes visible as soon as there is something to display inside -->
                         <page string="History" name="page_history" invisible="True">
                         </page>
+                        <page string="Sales Discount" name="discount">
+                        	<group>
+                        		<field name="outlet_discount_line" string="Discount by Country">
+		        					<tree>
+				        				<field name="country_id"/>
+		        						<field name="discount"/>		        					            		
+		        					</tree>
+		        					<form>
+				        				<field name="country_id"/>
+		        						<field name="discount"/>            			
+		        					</form>            		
+		        				</field>
+                        	</group>
+                        	<group>                        		
+                        		<label for="consignment_discount"/>
+			                	<div>
+				                    <field name="consignment_discount" class="oe_inline"/> percent
+			                	</div>                        		
+                        	</group>
+                        </page>
                         <page string="Bypass Order Confirmation" name="bypass">
                         	<group>
-                        		<field name="bypass_order" string="Bypass Order" group="group_partner_manager"/>
+                        		<field name="bypass_order" string="Bypass Order"/>
                         	</group>
                         </page>
                     </notebook>
@@ -256,7 +276,7 @@
             <field name="inherit_id" ref="product.view_partner_property_form"/>
             <field name="arch" type="xml">                		
                 <field name="property_product_pricelist" position="after">
-                	<field name="dsp_price_list_id"/>                		               
+                	<field name="dsp_price_list_id" invisible="1"/>                		               
 	                <field name="outlet_margin" invisible="1"/>
                	</field>            
             </field>

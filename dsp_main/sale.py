@@ -3,6 +3,7 @@ import pdb
 import pprint
 import time
 from datetime import datetime
+from openerp.tools import DEFAULT_SERVER_DATE_FORMAT, DEFAULT_SERVER_DATETIME_FORMAT, DATETIME_FORMATS_MAP, float_compare
 import openerp.addons.decimal_precision as dp
 
 class sale_shop(osv.osv):
@@ -414,7 +415,7 @@ class sale_order_line(osv.osv):
         product = self.pool.get('product.template').browse(cr, uid, product_dsp_id, context=None)
         product_product = self.pool.get('product.product').browse(cr, uid, product_dsp_id, context=None)
         
-        if sale_type == 'Consignment':
+        if sale_type == 'Consignment':            
             stock_search  = self.pool.get('stock.picking').search(cr, uid, [('type','=','internal'),('partner_id', '=', partner_id.id)], context=None)
                     
             min_value = 100000000
@@ -424,6 +425,7 @@ class sale_order_line(osv.osv):
                     
             stock_default = min_value
             
+            products = self.pool.get('product.product').browse(cr, uid, product_dsp_id, context=None)
             product = self.pool.get('product.template').browse(cr, uid, product_dsp_id, context=None)                            
             move_line = self.pool.get('stock.picking').browse(cr, uid, stock_default, context=context).move_lines
                         
@@ -434,8 +436,16 @@ class sale_order_line(osv.osv):
                     raise osv.except_osv(_('Warning Confirmation !'), _('This Internal moves has no line contains the product!"'))
                     price_unit = 0
             
-            print price_unit  
-                        
+            country = products.country_id.name
+            print country              
+                                    
+            outlet_disc_id = self.pool.get('outlet.discount').search(cr, uid, [('outlet_id','=',partner_id.id),('country_id', '=', country)], context=None)
+            if outlet_disc_id:
+                outlet_disc_obj = self.pool.get('outlet.discount').browse(cr, uid, outlet_disc_id, context=None)            
+                discount = outlet_disc_obj[0].discount
+            else:        
+                discount = partner_id.consignment_discount                                                        
+        
         else:    
             if sale_type == 'Promo':
                 discount = 100
@@ -446,7 +456,7 @@ class sale_order_line(osv.osv):
             sub_profit = profit * product_uom_qty        
             price_unit = product.real_price          
             
-            if product_product.foc == True:
+            if product_product.foc == 'FOC':
                 price_unit = 0  
             
         result = {'value': {

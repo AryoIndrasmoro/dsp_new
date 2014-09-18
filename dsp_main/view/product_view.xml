@@ -102,8 +102,7 @@
                 	<field name="volume_alcohol"/>
                 	<field name="appelation_id"/>
                 	<field name="brand"/>
-                	<field name="classification"/>
-                	<field name="foc"/>                	           
+                	<field name="classification"/>                	   	          
                 </field>         
                 <field name="standard_price" position="replace">
                 	<field name="standard_price" invisible='1'/>                	              
@@ -111,6 +110,9 @@
                 <field name="lst_price" position="replace">
                 	<field name="lst_price" invisible='1'/>                	              
                 </field>                
+                <field name="virtual_available" position="after">
+                	<field name="foc"/>             
+                </field>
             </field>
        	</record>
 		
@@ -140,6 +142,7 @@
                    <filter string='Region' icon="terp-stock_symbol-selection" domain="[]" context="{'group_by' : 'region_id'}"/>
                    <filter string='Appelation' icon="terp-stock_symbol-selection" domain="[]" context="{'group_by' : 'appelation_id'}"/>
                    <filter string='Type' icon="terp-stock_symbol-selection" domain="[]" context="{'group_by' : 'type_id'}"/>
+                   <filter string='FOC' icon="terp-stock_symbol-selection" domain="[]" context="{'group_by' : 'foc'}"/>
          		</xpath>
             </field>
         </record>
@@ -165,13 +168,16 @@
             <field name="name">product.product.list.tree</field>
             <field name="model">product.template</field>      
             <field name="inherit_id" ref="product.product_template_tree_view"/>
-            <field name="arch" type="xml">            	 
-            	<field name="name" position="after">            		
+            <field name="arch" type="xml">               	         	
+            	<field name="name" position="after">
+            		<field name="vintages"/>
+            		<field name="volume_l"/>                		            		
             		<field name="base_cost"/>
             		<field name="jkt_cost"/>
             		<field name="margin"/>
             		<field name="suggest_price"/>
-            		<field name="real_price"/>            		
+            		<field name="real_price"/>
+            		<field name="foc"/>            		
             	</field>                      
             	<field name="categ_id" position="replace">
             		<field name="categ_id" invisible="1"/>
@@ -184,6 +190,8 @@
             	</field>
             	<tree position="attributes">
     				<attribute name="colors">orange:suggest_price != real_price</attribute>
+    				<attribute name="create">false</attribute>
+    				<attribute name="version">7.0</attribute>
 				</tree>
             </field>
        	</record>
@@ -195,43 +203,28 @@
             	<search string="Products">
             		<group string="Filter">
             			<field name="name" string="Product Name" filter_domain="[('name','ilike',self)]"/>
-            			<field name="name" string="Vintages" filter_domain="[('vintages','ilike',self)]"/>
-            			<field name="name" string="Country" filter_domain="[('country_id','ilike',self)]"/>
-            			<field name="name" string="Region" filter_domain="[('region_id','ilike',self)]"/>
-            			<field name="name" string="Grape" filter_domain="[('grape_id','ilike',self)]"/>
-            			<field name="name" string="Type" filter_domain="[('type_id','ilike',self)]"/>
-            			<field name="name" string="Appelation" filter_domain="[('appelation_id','ilike',self)]"/>
-            			<field name="name" string="Brand" filter_domain="[('brand','ilike',self)]"/>
-            			<field name="name" string="Classification" filter_domain="[('classification','ilike',self)]"/>
+            			<field name="vintages" string="Vintages" filter_domain="[('vintages','ilike',self)]"/>
+            			<field name="volume_l" string="Volume L" filter_domain="[('volume_l','ilike',self)]"/>            			
             		</group>
 					<group string="Group By..">
-						<filter string='Vintage' icon="terp-stock_symbol-selection" domain="[]" context="{'group_by' : 'vintages'}"/>
-						<filter string='Country' icon="terp-stock_symbol-selection" domain="[]" context="{'group_by' : 'country_id'}"/>
-						<filter string='Region' icon="terp-stock_symbol-selection" domain="[]" context="{'group_by' : 'region_id'}"/>
-						<filter string='Brand' icon="terp-stock_symbol-selection" domain="[]" context="{'group_by' : 'brand'}"/>
-						<filter string='Type' icon="terp-stock_symbol-selection" domain="[]" context="{'group_by' : 'type_id'}"/>
-						<filter string='Appelation' icon="terp-stock_symbol-selection" domain="[]" context="{'group_by' : 'appelation_id'}"/>
-						<filter string='Classification' icon="terp-stock_symbol-selection" domain="[]" context="{'group_by' : 'classification'}"/>
-						<filter string='Grape' icon="terp-stock_symbol-selection" domain="[]" context="{'group_by' : 'grape_id'}"/>
-						<filter string='Volume L' icon="terp-stock_symbol-selection" domain="[]" context="{'group_by' : 'volume_l'}"/>
-						<filter string='Volume Alcohol' icon="terp-stock_symbol-selection" domain="[]" context="{'group_by' : 'volume_alcohol'}"/>
+						<filter string='Vintage' icon="terp-stock_symbol-selection" domain="[]" context="{'group_by' : 'vintages'}"/>						
+						<filter string='Volume L' icon="terp-stock_symbol-selection" domain="[]" context="{'group_by' : 'volume_l'}"/>						
 						<filter string='FOC' icon="terp-stock_symbol-selection" domain="[]" context="{'group_by' : 'foc'}"/>
 					</group>            		
             	</search>            	
             </field>            	
-        </record>
-                 
-    	<record id="product_list_action" model="ir.actions.act_window">
+        </record>                     	
+        
+        <record id="product_list_action_tree" model="ir.actions.act_window">
             <field name="name">Product List</field>
             <field name="type">ir.actions.act_window</field>
             <field name="res_model">product.template</field>
-            <field name="view_mode">tree</field>
-            <field name="view_type">tree</field>                       
-            <field name="view_id" ref="product.product_template_tree_view"/>
-            <field name="search_view_id" ref="product_list_search_form_view"/>                        
+            <field name="inherit_id" ref="product.product_template_tree_view"/>
+            <field name="view_type">form</field>                                  
+            <field name="search_view_id" ref="product_list_search_form_view"/>
         </record>
         
-    	<menuitem action="product_list_action" 
+    	<menuitem action="product_list_action_tree" 
     		id="menu_product_list" parent="base.menu_product" sequence="1"/>
     				       
     </data>

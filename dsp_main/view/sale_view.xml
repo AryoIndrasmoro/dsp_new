@@ -24,7 +24,7 @@
 					<button name="action_confirm_quotation" states="draft" string="Confirm Quotation" type="object" groups="base.group_user"/>
 				</button>				
         		<field name="partner_shipping_id" position="after">
-            		<field name="sale_type" on_change="onchange_sale_type(sale_type, partner_id)"/>
+            		<field name="sale_type" on_change="onchange_sale_type(sale_type, partner_id)" groups="base.group_sale_salesman_all_leads,base.group_sale_manager"/>
                 </field>     
                                         		
 				<page string="Other Information" groups="base.group_user" position="after">

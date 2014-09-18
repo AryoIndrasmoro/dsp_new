@@ -16,13 +16,25 @@ from openerp.tools import DEFAULT_SERVER_DATE_FORMAT, DEFAULT_SERVER_DATETIME_FO
 class purchase_order(osv.osv):
     _inherit = 'purchase.order'
     _columns = {
-                'rate': fields.float('IDR Exchange Rate')
+                'rate': fields.float('Current Rate')
                 }
-
+    
+    def onchange_pricelist(self, cr, uid, ids, pricelist_id, context=None):
+        if not pricelist_id:
+            return {}
+        return {'value': {
+                    'currency_id': self.pool.get('product.pricelist').browse(cr, uid, pricelist_id, context=context).currency_id.id,
+                    'rate' : self.pool.get('product.pricelist').browse(cr, uid, pricelist_id, context=context).currency_id.rate
+                    }
+                }
+        
 purchase_order()
 
 class purchase_order_line(osv.osv):
     _inherit = 'purchase.order.line'
+    _columns = {        
+            'price_idr'    : fields.float('Unit Price (IDR)', digits_compute=dp.get_precision('Product Price')),            
+                }    
     
     def onchange_product_id(self, cr, uid, ids, pricelist_id, product_id, qty, uom_id,
             partner_id, date_order=False, fiscal_position_id=False, date_planned=False,
@@ -106,15 +118,26 @@ class purchase_order_line(osv.osv):
                     product.id, qty or 1.0, partner_id or False, {'uom': uom_id, 'date': date_order})[pricelist_id]
         else:
             price = product.standard_price
-
-        if product.foc == True:
-            price = 0
-            
+                    
+        price = 0
+        
         taxes = account_tax.browse(cr, uid, map(lambda x: x.id, product.supplier_taxes_id))
         fpos = fiscal_position_id and account_fiscal_position.browse(cr, uid, fiscal_position_id, context=context) or False
         taxes_ids = account_fiscal_position.map_tax(cr, uid, fpos, taxes)
         res['value'].update({'price_unit': price, 'taxes_id': taxes_ids})
 
-        return res    
-
+        return res
+    
+    def onchange_price_unit(self, cr, uid, ids, pricelist_id, price_unit, qty, context=None):
+        pricelist_obj = self.pool.get('product.pricelist').browse(cr, uid , pricelist_id, context=None)        
+        
+        rate = pricelist_obj.currency_id.rate
+        price_idr = price_unit * rate
+                        
+        result = {'value': {
+                        'price_idr' : price_idr,                            
+                        }
+                    }                                                                           
+        return result        
+        
 purchase_order_line()

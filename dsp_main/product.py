@@ -50,11 +50,8 @@ product_appelation()
 class product_product(osv.osv):
     _inherit = 'product.product'
     _columns = {
-        #'vintages': fields.boolean('Outlets/Customers', help="Check this box if this contact is a customer / outlet."),
-        'vintages': fields.selection([(num, str(num)) for num in range(1970, (datetime.now().year) )], 'Vintages', store='True'),
-        'classification': fields.char('Classification', size=128),
-        'volume_l': fields.float('Volume (L)', digits_compute=dp.get_precision('Product Price')),
-        'volume_alcohol': fields.float('Volume Alcohol (%)', digits_compute=dp.get_precision('Product Price')),
+        #'vintages': fields.boolean('Outlets/Customers', help="Check this box if this contact is a customer / outlet."),        
+        'classification': fields.char('Classification', size=128),        
         'grape_id': fields.many2one('product.grape', 'Grape', required=False, ondelete='cascade',
             help="Product Grape."),   
         'country_id': fields.many2one('res.country', 'Country', required=False, ondelete='cascade',
@@ -65,15 +62,13 @@ class product_product(osv.osv):
             help="Product Type."),   
         'appelation_id': fields.many2one('product.appelation', 'Appelation', required=False, ondelete='cascade',
             help="Product Appelation."),            
-        'brand': fields.char('Brand'),
-        'foc': fields.boolean('FOC'),  
-                                        
+        'brand': fields.char('Brand'),                                            
     }
     
     _defaults = {        
-        'cost_method': 'average',        
-        'valuation': 'real_time',
-        'type'      : 'product',
+        'cost_method'   : 'average',        
+        'valuation'     : 'real_time',
+        'type'          : 'product',        
     }
     
     #===========================================================================
@@ -105,7 +100,8 @@ class product_product(osv.osv):
                 name = '[%s] %s' % (code,name)
             if vintage:
                 name = name + ' - ' + str(vintage)
-            if foc:
+            
+            if foc == 'FOC':
                 name = name + ' - FOC'
             #else:
             #    name = name + ' - NV'
@@ -165,14 +161,20 @@ class product_template(osv.osv):
     
     
     _columns = {
-            'name': fields.char('Name', size=128, required=True, translate=True, select=True, change_default=True),
+            'name'              : fields.char('Name', size=128, required=True, translate=True, select=True, change_default=True),
+            'vintages'          : fields.selection([(num, str(num)) for num in range(1970, (datetime.now().year) )], 'Vintages', store='True'),
+            'volume_l'          : fields.float('Volume (L)', digits_compute=dp.get_precision('Product Price')),
+            'volume_alcohol'    : fields.float('Volume Alcohol (%)', digits_compute=dp.get_precision('Product Price')),
+            'foc'               : fields.selection([('FOC', 'FOC'),('Regular', 'Regular')], 'FOC'),
             'jkt_cost'          : fields.float('JKT Cost', digits_compute=dp.get_precision('Product Price')),
             'base_cost'         : fields.float('SG Cost', digits_compute=dp.get_precision('Product Price')),
             'margin'            : fields.float('Margin (%)', digits_compute=dp.get_precision('Product Price')),
-            'suggest_price'     : fields.function(_compute_suggest_price, string="Suggested Price", type='float', digits_compute=dp.get_precision('Account'), multi="_compute_amounts"),
-            'move_cost'         : fields.float('Product Real Price', digits_compute=dp.get_precision('Product Price')),                    
+            'suggest_price'     : fields.function(_compute_suggest_price, string="Suggested Price", type='float', digits_compute=dp.get_precision('Product Price'), multi="_compute_amounts"),                            
             'real_price'        : fields.float('Product Real Price', digits_compute=dp.get_precision('Product Price')),                                
             #'real_price'    : fields.function(_compute_suggest_price, string="Real Price", type='float', digits_compute=dp.get_precision('Account'), multi="_compute_amounts"),
                 }
-
+    
+    _defaults = {        
+        'foc'   : 'reg',                    
+    }
 product_template()

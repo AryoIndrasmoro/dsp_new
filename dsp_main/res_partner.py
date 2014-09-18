@@ -26,11 +26,13 @@ import openerp.addons.decimal_precision as dp
 class res_partner(osv.osv):
     _inherit = 'res.partner'
     _columns = {
-        'customer': fields.boolean('Outlets/Customers', help="Check this box if this contact is a customer / outlet."),        
-        'discount': fields.selection([(5, '5'),(10,'10'),(15,'15'),(20,'20'),(25,'25'),(30,'30') ], 'Incentive Discount (%)'),
-        'dsp_price_list_id' : fields.selection([('standard', 'Suggest Price'), ('real', 'Real Price'), ('outlet', 'Outlet Price')], 'DSP Price List', invisible="1"),
-        'outlet_margin'     : fields.float('Outlet Margin (%)', digits_compute=dp.get_precision('Product Price')),
-        'bypass_order'      : fields.boolean('Bypass Order', help="Check this box if this this outlet allowed to order in outstanding payment status"),
+        'customer'              : fields.boolean('Outlets/Customers', help="Check this box if this contact is a customer / outlet."),        
+        'discount'              : fields.selection([(5, '5'),(10,'10'),(15,'15'),(20,'20'),(25,'25'),(30,'30') ], 'Incentive Discount (%)'),
+        'dsp_price_list_id'     : fields.selection([('standard', 'Suggest Price'), ('real', 'Real Price'), ('outlet', 'Outlet Price')], 'DSP Price List', invisible="1"),
+        'outlet_margin'         : fields.float('Outlet Margin (%)', digits_compute=dp.get_precision('Product Price')),
+        'bypass_order'          : fields.boolean('Bypass Order', help="Check this box if this this outlet allowed to order in outstanding payment status"),
+        'outlet_discount_line'  : fields.one2many('outlet.discount', 'outlet_id', 'Discount'),
+        'consignment_discount'  : fields.float('Consignment Discount', digits_compute=dp.get_precision('Product Price')),
     }
     
     _defaults = {
@@ -39,3 +41,13 @@ class res_partner(osv.osv):
                  }
 
 res_partner()
+
+class outlet_discount(osv.osv):
+    _name = 'outlet.discount'
+    _columns = {
+        'outlet_id'         : fields.many2one('res.partner', 'Outlet/Customer'),        
+        'country_id'        : fields.many2one('res.country', 'Country'),
+        'discount'          : fields.float('Discount (%)', digits_compute=dp.get_precision('Discount')),        
+    }
+    
+outlet_discount()
