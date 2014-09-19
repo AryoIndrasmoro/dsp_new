@@ -16,7 +16,7 @@ from openerp.tools import DEFAULT_SERVER_DATE_FORMAT, DEFAULT_SERVER_DATETIME_FO
 class purchase_order(osv.osv):
     _inherit = 'purchase.order'
     _columns = {
-                'rate': fields.float('Current Rate')
+                'rate_dsp': fields.float('Current Rate', digits=(12,6))
                 }
     
     def onchange_pricelist(self, cr, uid, ids, pricelist_id, context=None):
@@ -24,7 +24,7 @@ class purchase_order(osv.osv):
             return {}
         return {'value': {
                     'currency_id': self.pool.get('product.pricelist').browse(cr, uid, pricelist_id, context=context).currency_id.id,
-                    'rate' : self.pool.get('product.pricelist').browse(cr, uid, pricelist_id, context=context).currency_id.rate
+                    'rate_dsp' : self.pool.get('product.pricelist').browse(cr, uid, pricelist_id, context=context).currency_id.rate
                     }
                 }
         
@@ -131,8 +131,8 @@ class purchase_order_line(osv.osv):
     def onchange_price_unit(self, cr, uid, ids, pricelist_id, price_unit, qty, context=None):
         pricelist_obj = self.pool.get('product.pricelist').browse(cr, uid , pricelist_id, context=None)        
         
-        rate = pricelist_obj.currency_id.rate
-        price_idr = price_unit * rate
+        rate_dsp = pricelist_obj.currency_id.rate_dsp
+        price_idr = price_unit * (1 / rate_dsp)
                         
         result = {'value': {
                         'price_idr' : price_idr,                            

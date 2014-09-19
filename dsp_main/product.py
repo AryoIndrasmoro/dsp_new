@@ -50,24 +50,12 @@ product_appelation()
 class product_product(osv.osv):
     _inherit = 'product.product'
     _columns = {
-        #'vintages': fields.boolean('Outlets/Customers', help="Check this box if this contact is a customer / outlet."),        
-        'classification': fields.char('Classification', size=128),        
-        'grape_id': fields.many2one('product.grape', 'Grape', required=False, ondelete='cascade',
-            help="Product Grape."),   
-        'country_id': fields.many2one('res.country', 'Country', required=False, ondelete='cascade',
-            help="Product Country."),
-        'region_id': fields.many2one('product.region', 'Region', required=False, ondelete='cascade',
-            help="Product Region."),  
-        'type_id': fields.many2one('product.type', 'Type', required=False, ondelete='cascade',
-            help="Product Type."),   
-        'appelation_id': fields.many2one('product.appelation', 'Appelation', required=False, ondelete='cascade',
-            help="Product Appelation."),            
-        'brand': fields.char('Brand'),                                            
+        #'vintages': fields.boolean('Outlets/Customers', help="Check this box if this contact is a customer / outlet."),                                                        
     }
     
     _defaults = {        
         'cost_method'   : 'average',        
-        'valuation'     : 'real_time',
+        'valuation'     : 'manual_periodic',
         'type'          : 'product',        
     }
     
@@ -163,6 +151,13 @@ class product_template(osv.osv):
     _columns = {
             'name'              : fields.char('Name', size=128, required=True, translate=True, select=True, change_default=True),
             'vintages'          : fields.selection([(num, str(num)) for num in range(1970, (datetime.now().year) )], 'Vintages', store='True'),
+            'classification'    : fields.char('Classification', size=128),        
+            'grape_id'          : fields.many2one('product.grape', 'Grape', required=False, ondelete='cascade', help="Product Grape."),   
+            'country_id'        : fields.many2one('res.country', 'Country', required=False, ondelete='cascade', help="Product Country."),
+            'region_id'         : fields.many2one('product.region', 'Region', required=False, ondelete='cascade', help="Product Region."),  
+            'type_id'           : fields.many2one('product.type', 'Type', required=False, ondelete='cascade', help="Product Type."),   
+            'appelation_id'     : fields.many2one('product.appelation', 'Appelation', required=False, ondelete='cascade', help="Product Appelation."),            
+            'brand'             : fields.char('Brand'),
             'volume_l'          : fields.float('Volume (L)', digits_compute=dp.get_precision('Product Price')),
             'volume_alcohol'    : fields.float('Volume Alcohol (%)', digits_compute=dp.get_precision('Product Price')),
             'foc'               : fields.selection([('FOC', 'FOC'),('Regular', 'Regular')], 'FOC'),

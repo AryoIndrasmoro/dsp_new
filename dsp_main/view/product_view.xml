@@ -79,10 +79,8 @@
 	            	<t t-if="record.vintages.raw_value"> - <field name="vintages"/></t> 
 	            </field>	                            	            
 				<ul position="inside">                    
-                    <li t-if="record.type.raw_value != 'service'">SG Cost: <field name="base_cost"/></li>
-                    <li t-if="record.type.raw_value != 'service'">JKT Cost: <field name="jkt_cost"/></li>
-                    <li t-if="record.type.raw_value != 'service'">Suggest Price: <field name="suggest_price"/></li>
-                    <li t-if="record.type.raw_value != 'service'">Real Price: <field name="real_price"/></li>
+                    <li t-if="record.type.raw_value != 'service'">Grape: <field name="grape_id"/></li>
+                    <li t-if="record.type.raw_value != 'service'">Brand: <field name="brand"/></li>                    
                 </ul>            	   
 	        </field>
 	    </record>
@@ -91,12 +89,14 @@
             <field name="name">product.product.tree.pricelist</field>
             <field name="model">product.product</field>
             <field name="inherit_id" ref="product.product_product_tree_view"/>
-            <field name="arch" type="xml">
-                <field name="name" position="after">                	
+            <field name="arch" type="xml">            	
+                <field name="name" position="replace">
+                	<field name="grape_id"/>
+                	<field name="brand"/>             
+                	<field name="name"/>   	
                 	<field name="vintages"/>                	
                 	<field name="country_id"/>
-                	<field name="region_id"/>
-                	<field name="grape_id"/>
+                	<field name="region_id"/>                	
                 	<field name="type_id"/>
                 	<field name="volume_l"/>
                 	<field name="volume_alcohol"/>
@@ -111,6 +111,7 @@
                 	<field name="lst_price" invisible='1'/>                	              
                 </field>                
                 <field name="virtual_available" position="after">
+                	<field name="real_price"/>
                 	<field name="foc"/>             
                 </field>
             </field>
@@ -133,6 +134,7 @@
             <field name="inherit_id" ref="product.product_search_form_view"/>
             <field name="arch" type="xml">
             	<xpath expr="/search/group/filter[@string='Type']" position="after">            		            
+            	   <filter string='Brand' icon="terp-stock_symbol-selection" domain="[]" context="{'group_by' : 'brand'}"/>
                    <filter string='Vintage' icon="terp-stock_symbol-selection" domain="[]" context="{'group_by' : 'vintages'}"/>                       	                               
                    <filter string='Classification' icon="terp-stock_symbol-selection" domain="[]" context="{'group_by' : 'classification'}"/>
                    <filter string='Volume L' icon="terp-stock_symbol-selection" domain="[]" context="{'group_by' : 'volume_l'}"/>
@@ -169,7 +171,10 @@
             <field name="model">product.template</field>      
             <field name="inherit_id" ref="product.product_template_tree_view"/>
             <field name="arch" type="xml">               	         	
-            	<field name="name" position="after">
+            	<field name="name" position="replace">
+            		<field name="grape_id"/>
+            		<field name="brand"/>
+            		<field name="name"/>
             		<field name="vintages"/>
             		<field name="volume_l"/>                		            		
             		<field name="base_cost"/>
