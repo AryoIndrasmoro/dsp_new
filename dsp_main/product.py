@@ -29,6 +29,11 @@ class product_grape(osv.osv):
     _columns = {'name': fields.char('Name', size=128)}
 product_grape() 
 
+class product_brand(osv.osv):
+    _name = 'product.brand'
+    _columns = {'name': fields.char('Name', size=128)}
+product_brand()
+
 class product_region(osv.osv):
     _name = 'product.region'
     _columns = {
@@ -157,7 +162,7 @@ class product_template(osv.osv):
             'region_id'         : fields.many2one('product.region', 'Region', required=False, ondelete='cascade', help="Product Region."),  
             'type_id'           : fields.many2one('product.type', 'Type', required=False, ondelete='cascade', help="Product Type."),   
             'appelation_id'     : fields.many2one('product.appelation', 'Appelation', required=False, ondelete='cascade', help="Product Appelation."),            
-            'brand'             : fields.char('Brand'),
+            'brand'             : fields.many2one('product.brand', 'Brand', required=False, ondelete='cascade'),
             'volume_l'          : fields.float('Volume (L)', digits_compute=dp.get_precision('Product Price')),
             'volume_alcohol'    : fields.float('Volume Alcohol (%)', digits_compute=dp.get_precision('Product Price')),
             'foc'               : fields.selection([('FOC', 'FOC'),('Regular', 'Regular')], 'FOC'),

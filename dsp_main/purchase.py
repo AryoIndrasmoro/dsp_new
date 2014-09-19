@@ -27,7 +27,14 @@ class purchase_order(osv.osv):
                     'rate_dsp' : self.pool.get('product.pricelist').browse(cr, uid, pricelist_id, context=context).currency_id.rate
                     }
                 }
-        
+    
+    def create(self, cr, uid, vals, context=None):
+        print vals
+        if vals.get('name','/')=='/':
+            vals['name'] = self.pool.get('ir.sequence').get(cr, uid, 'purchase.order') or '/'
+        order =  super(purchase_order, self).create(cr, uid, vals, context=context)
+        return order
+    
 purchase_order()
 
 class purchase_order_line(osv.osv):
@@ -131,7 +138,7 @@ class purchase_order_line(osv.osv):
     def onchange_price_unit(self, cr, uid, ids, pricelist_id, price_unit, qty, context=None):
         pricelist_obj = self.pool.get('product.pricelist').browse(cr, uid , pricelist_id, context=None)        
         
-        rate_dsp = pricelist_obj.currency_id.rate_dsp
+        rate_dsp = pricelist_obj.currency_id.rate
         price_idr = price_unit * (1 / rate_dsp)
                         
         result = {'value': {
