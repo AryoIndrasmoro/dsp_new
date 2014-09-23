@@ -25,6 +25,7 @@
 				</button>				
         		<field name="partner_shipping_id" position="after">
             		<field name="sale_type" on_change="onchange_sale_type(sale_type, partner_id)" groups="base.group_sale_salesman_all_leads,base.group_sale_manager"/>
+            		<field name="total_fee"/>
                 </field>     
                                         		
 				<page string="Other Information" groups="base.group_user" position="after">
@@ -71,9 +72,9 @@
             <field name="arch" type="xml">
             	<data>            		
             		<div name="discount" groups="sale.group_discount_per_so_line" position="after">
+            			<field name="fee"/>
                         <field name="cons_doc" readonly="1" 
-                        	on_change="onchange_cons_doc(cons_doc, product_dsp_id, parent.sale_type, parent.partner_id)"/>
-                        <field name="fee"/>
+                        	on_change="onchange_cons_doc(cons_doc, product_dsp_id, parent.sale_type, parent.partner_id)"/>                        
                         <field name="jkt_cost" invisible="1"/>                        
                         <field name="profit" invisible="1"/>
                         <field name="sub_profit" invisible="1"/>                        	            			           	
@@ -82,6 +83,17 @@
             </field>
     	</record>    	    	
     	
+    	<record id="view_order_tree_dsp2" model="ir.ui.view">
+            <field name="name">sale.order.tree.dsp2</field>
+            <field name="model">sale.order</field>            
+            <field name="inherit_id" ref="sale.view_order_tree"/>
+            <field name="arch" type="xml">               	
+                <field name="amount_total" position="after">
+                	<field name="total_fee"/>	
+                </field>	               
+            </field>
+        </record>
+        
     	<record id="view_order_tree_dsp" model="ir.ui.view">
             <field name="name">sale.order.tree.dsp</field>
             <field name="model">sale.order</field>
@@ -95,6 +107,7 @@
         		</xpath>
         		<xpath expr="/form/sheet/notebook/page[@string='Order Lines']/field[@name='order_line']/tree/field[@name='discount']" position="after">
         			<field name="fee" string="Fee"/>
+        			<field name="total_discount" string="Total Discount"/>
         		</xpath>
             </field>
     	</record>
@@ -109,6 +122,6 @@
                	</field>                       
            </field>
         </record>
-        
+                        
 	</data>
 </openerp>

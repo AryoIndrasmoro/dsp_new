@@ -136,9 +136,10 @@ class stock_picking(osv.osv):
             
         
                 for move in pick.move_lines:                                        
-                    purchase_obj_id = self.pool.get('purchase.order.line').search(cr, uid, [('order_id','=',pick.purchase_id.id),('product_id','=',move.product_id.id)])
-                    purchase_obj = self.pool.get('purchase.order.line').browse(cr, uid, purchase_obj_id, context=None)
-                    price_idr = purchase_obj[0].price_idr                        
+                    if pick.type == "in":
+                        purchase_obj_id = self.pool.get('purchase.order.line').search(cr, uid, [('order_id','=',pick.purchase_id.id),('product_id','=',move.product_id.id)])
+                        purchase_obj = self.pool.get('purchase.order.line').browse(cr, uid, purchase_obj_id, context=None)                                    
+                        price_idr = purchase_obj[0].price_idr                        
                                                                 
                     if move.state in ('done', 'cancel'):
                         continue
@@ -178,6 +179,7 @@ class stock_picking(osv.osv):
                                 move_currency_id, price_idr)
                         new_price = uom_obj._compute_price(cr, uid, product_uom, new_price,
                                 product.uom_id.id)
+                        new_price = price_idr
                         #if product.qty_available <= 0:
                         print "masuk 2"
                         if product.qty_available < 0:
@@ -211,7 +213,7 @@ class stock_picking(osv.osv):
                                     total_qty += product_qty
                                 
                                 # print "total_qty>>>>>>>>>>>>>>>>>>", total_qty, total_credit, total_credit * (qty/total_qty)
-                                cost_component_each_item = total_credit * (qty/total_qty) or 0.0
+                                cost_component_each_item = total_credit * (qty/total_qty) or 0.0                                
                                 new_std_price = ((amount_unit * product_avail[product.id])\
                                     + (new_price * qty) + cost_component_each_item) / (product_avail[product.id] + qty)
                                 

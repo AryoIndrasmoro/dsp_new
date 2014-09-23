@@ -15,9 +15,55 @@ from openerp.tools import DEFAULT_SERVER_DATE_FORMAT, DEFAULT_SERVER_DATETIME_FO
 
 class purchase_order(osv.osv):
     _inherit = 'purchase.order'
+    
+    def _amount_all(self, cr, uid, ids, field_name, arg, context=None):
+        res = {}
+        cur_obj=self.pool.get('res.currency')
+        for order in self.browse(cr, uid, ids, context=context):
+            res[order.id] = {
+                'amount_untaxed': 0.0,
+                'amount_tax': 0.0,
+                'amount_total': 0.0,
+                'amount_total_idr': 0.0,
+            }
+            val = val1 = val_idr = 0.0
+            cur = order.pricelist_id.currency_id
+            for line in order.order_line:
+                val1 += line.price_subtotal
+                val_idr += line.price_subtotal_idr
+                for c in self.pool.get('account.tax').compute_all(cr, uid, line.taxes_id, line.price_unit, line.product_qty, line.product_id, order.partner_id)['taxes']:
+                    val += c.get('amount', 0.0)
+            res[order.id]['amount_tax']=cur_obj.round(cr, uid, cur, val)
+            res[order.id]['amount_untaxed']=cur_obj.round(cr, uid, cur, val1)
+            res[order.id]['amount_total']=res[order.id]['amount_untaxed'] + res[order.id]['amount_tax']
+            res[order.id]['amount_total_idr'] = val_idr
+        return res
+
+    def _get_order(self, cr, uid, ids, context=None):
+        result = {}
+        for line in self.pool.get('purchase.order.line').browse(cr, uid, ids, context=context):
+            result[line.order_id.id] = True
+        return result.keys()
+    
     _columns = {
-                'rate_dsp': fields.float('Current Rate', digits=(12,6))
-                }
+                'rate_dsp'          : fields.float('Current Rate', digits=(12,6)),                
+                'amount_untaxed': fields.function(_amount_all, digits_compute= dp.get_precision('Account'), string='Untaxed Amount',
+                    store={
+                        'purchase.order.line': (_get_order, None, 10),
+                    }, multi="sums", help="The amount without tax", track_visibility='always'),
+                'amount_tax': fields.function(_amount_all, digits_compute= dp.get_precision('Account'), string='Taxes',
+                    store={
+                        'purchase.order.line': (_get_order, None, 10),
+                    }, multi="sums", help="The tax amount"),
+                'amount_total': fields.function(_amount_all, digits_compute= dp.get_precision('Account'), string='Total',
+                    store={
+                        'purchase.order.line': (_get_order, None, 10),
+                    }, multi="sums",help="The total amount"),            
+                'amount_total_idr'  : fields.function(_amount_all, digits_compute= dp.get_precision('Account'), string='Total IDR',
+                    store={
+                        'purchase.order.line': (_get_order, None, 10),
+                    }, multi="sums",help="The total amount"),
+            }
     
     def onchange_pricelist(self, cr, uid, ids, pricelist_id, context=None):
         if not pricelist_id:
@@ -39,8 +85,20 @@ purchase_order()
 
 class purchase_order_line(osv.osv):
     _inherit = 'purchase.order.line'
+    
+    def _amount_line_idr(self, cr, uid, ids, prop, arg, context=None):
+        res = {}
+        cur_obj=self.pool.get('res.currency')
+        tax_obj = self.pool.get('account.tax')
+        for line in self.browse(cr, uid, ids, context=context):
+            taxes = tax_obj.compute_all(cr, uid, line.taxes_id, line.price_idr, line.product_qty, line.product_id, line.order_id.partner_id)
+            cur = line.order_id.pricelist_id.currency_id
+            res[line.id] = cur_obj.round(cr, uid, cur, taxes['total'])
+        return res
+    
     _columns = {        
-            'price_idr'    : fields.float('Unit Price (IDR)', digits_compute=dp.get_precision('Product Price')),            
+            'price_idr'             : fields.float('Unit Price (IDR)', digits_compute=dp.get_precision('Product Price')),
+            'price_subtotal_idr'    : fields.function(_amount_line_idr, string='Subtotal IDR', digits_compute= dp.get_precision('Account')),            
                 }    
     
     def onchange_product_id(self, cr, uid, ids, pricelist_id, product_id, qty, uom_id,

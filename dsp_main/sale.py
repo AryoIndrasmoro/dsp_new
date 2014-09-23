@@ -18,7 +18,35 @@ sale_shop()
 class sale_order(osv.osv):
     _inherit = "sale.order"
     _description = "Sales Order Inherit DSP"
-            
+    
+    def _amount_all(self, cr, uid, ids, field_name, arg, context=None):
+        cur_obj = self.pool.get('res.currency')
+        res = {}
+        for order in self.browse(cr, uid, ids, context=context):
+            res[order.id] = {
+                'amount_untaxed': 0.0,
+                'amount_tax': 0.0,
+                'amount_total': 0.0,
+                'total_fee' : 0.0,
+            }
+            val = val1 = val2 = 0.0
+            cur = order.pricelist_id.currency_id
+            for line in order.order_line:
+                val1 += line.price_subtotal
+                val += self._amount_line_tax(cr, uid, line, context=context)
+                val2 += (line.fee * line.product_uom_qty)
+            res[order.id]['amount_tax'] = cur_obj.round(cr, uid, cur, val)
+            res[order.id]['amount_untaxed'] = cur_obj.round(cr, uid, cur, val1)
+            res[order.id]['amount_total'] = res[order.id]['amount_untaxed'] + res[order.id]['amount_tax']
+            res[order.id]['total_fee'] = val2
+        return res
+                
+    def _get_order(self, cr, uid, ids, context=None):
+        result = {}
+        for line in self.pool.get('sale.order.line').browse(cr, uid, ids, context=context):
+            result[line.order_id.id] = True
+        return result.keys()
+    
     def action_confirm_quotation(self, cr, uid, ids, context=None):        
         return self.write(cr, uid, ids, {'state': 'quotation_confirm'})        
     
@@ -51,19 +79,44 @@ class sale_order(osv.osv):
             'sale_warehouse' : order.shop_id.name,
             'consignment' : sale_type,
             'sales_person' : current_user.name,                   
-        }
-        
+        }    
+    
     _columns ={
-               'payment_term'       : fields.many2one('account.payment.term', 'Payment Term', required = True),
-               'partner_id'         : fields.many2one('res.partner', 'Outlet/Customer', readonly=True, states={'draft': [('readonly', False)], 'sent': [('readonly', False)]}, required=True, change_default=True, select=True, track_visibility='always'),
-               'sale_type'          : fields.selection([('Promo', 'Promo'), ('Consignment', 'Consignment'),('Direct Selling','Direct Selling') ], 'Sale Type'),
-               'person_name'        : fields.char('Person Name', size=128),
-               'date_confirmed'     : fields.date('Input Date'),
-               'file_confirmed'     : fields.binary('Quotation File'),
-               'person_name_order'    : fields.char('Person Name', size=128),
-               'date_confirmed_order' : fields.date('Input Date'),
-               'file_confirmed_order' : fields.binary('Sales Order File'),
-               'dsp_price_list_id': fields.selection([('Real Price', 'Real Price'), ('Outlet Price', 'Outlet Price')], 'DSP Price List'),                              
+               'payment_term'           : fields.many2one('account.payment.term', 'Payment Term', required = True),
+               'partner_id'             : fields.many2one('res.partner', 'Outlet/Customer', readonly=True, states={'draft': [('readonly', False)], 'sent': [('readonly', False)]}, required=True, change_default=True, select=True, track_visibility='always'),
+               'sale_type'              : fields.selection([('Promo', 'Promo'), ('Consignment', 'Consignment'),('Direct Selling','Direct Selling') ], 'Sale Type'),
+               'person_name'            : fields.char('Person Name', size=128),
+               'date_confirmed'         : fields.date('Input Date'),
+               'file_confirmed'         : fields.binary('Quotation File'),
+               'person_name_order'      : fields.char('Person Name', size=128),
+               'date_confirmed_order'   : fields.date('Input Date'),
+               'file_confirmed_order'   : fields.binary('Sales Order File'),
+               'dsp_price_list_id'      : fields.selection([('Real Price', 'Real Price'), ('Outlet Price', 'Outlet Price')], 'DSP Price List'),
+               
+               'total_fee' : fields.function(_amount_all, string='Total Fee', digits_compute=dp.get_precision('Account'), 
+                    store={
+                        'sale.order': (lambda self, cr, uid, ids, c={}: ids, ['order_line'], 10),
+                        'sale.order.line': (_get_order, ['price_unit', 'tax_id', 'discount', 'product_uom_qty'], 10),
+                    },
+                    multi='sums', help="The amount without tax.", track_visibility='always'),                                                          
+               'amount_untaxed': fields.function(_amount_all, digits_compute=dp.get_precision('Account'), string='Untaxed Amount',
+                    store={
+                        'sale.order': (lambda self, cr, uid, ids, c={}: ids, ['order_line'], 10),
+                        'sale.order.line': (_get_order, ['price_unit', 'tax_id', 'discount', 'product_uom_qty'], 10),
+                    },
+                    multi='sums', help="The amount without tax.", track_visibility='always'),
+               'amount_tax': fields.function(_amount_all, digits_compute=dp.get_precision('Account'), string='Taxes',
+                    store={
+                        'sale.order': (lambda self, cr, uid, ids, c={}: ids, ['order_line'], 10),
+                        'sale.order.line': (_get_order, ['price_unit', 'tax_id', 'discount', 'product_uom_qty'], 10),
+                    },
+                    multi='sums', help="The tax amount."),
+               'amount_total': fields.function(_amount_all, digits_compute=dp.get_precision('Account'), string='Total',
+                    store={
+                        'sale.order': (lambda self, cr, uid, ids, c={}: ids, ['order_line'], 10),
+                        'sale.order.line': (_get_order, ['price_unit', 'tax_id', 'discount', 'product_uom_qty'], 10),
+                    },
+                    multi='sums', help="The total amount."),                                             
                'state': fields.selection([
                     ('draft', 'Draft Quotation'),
                     ('sent', 'Quotation Sent'),
@@ -76,7 +129,7 @@ class sale_order(osv.osv):
                     ('invoice_except', 'Invoice Exception'),
                     ('done', 'Done'),
                     ], 'Status', readonly=True, track_visibility='onchange',
-                    help="Gives the status of the quotation or sales order. \nThe exception status is automatically set when a cancel operation occurs in the processing of a document linked to the sales order. \nThe 'Waiting Schedule' status is set when the invoice is confirmed but waiting for the scheduler to run on the order date.", select=True),    
+                    help="Gives the status of the quotation or sales order. \nThe exception status is automatically set when a cancel operation occurs in the processing of a document linked to the sales order. \nThe 'Waiting Schedule' status is set when the invoice is confirmed but waiting for the scheduler to run on the order date.", select=True),               
             }
     
     def _prepare_order_line_move(self, cr, uid, order, line, picking_id, date_planned, context=None):
@@ -102,8 +155,8 @@ class sale_order(osv.osv):
             'state': 'draft',
             #'state': 'waiting',
             'company_id': order.company_id.id,
-            'price_unit': line.price_subtotal,
-            'price_unit_view': line.price_subtotal,
+            'price_unit': line.price_unit,
+            'price_unit_view': line.price_unit,
         }
         
     def create(self, cr, uid, vals, context=None):
@@ -120,7 +173,7 @@ class sale_order(osv.osv):
         # check if there's still any open Invoice            
         invoice_search  = self.pool.get('account.invoice').search(cr, uid, [('state','=','open')], context=None)                            
         # Get the list of open invoice                        
-        invoice_obj = self.pool.get('account.invoice').browse(cr, uid, invoice_search, context=None)
+        invoice_obj = self.pool.get('account.invoice').browse(cr, uid, invoice_search, context=None)            
         
         #=======================================================================
         # for inv in invoice_obj1:            
@@ -281,6 +334,16 @@ class sale_order_line(osv.osv):
             res[line.id] = cur_obj.round(cr, uid, cur, taxes['total'])
         return res
     
+    def _amount_discount(self, cr, uid, ids, field_name, arg, context=None):
+        tax_obj = self.pool.get('account.tax')
+        cur_obj = self.pool.get('res.currency')
+        res = {}                    
+        if context is None:
+            context = {}
+        for line in self.browse(cr, uid, ids, context=context):                    
+            res[line.id] = (line.price_unit * (line.discount or 0.0) / 100.0) - line.fee                                        
+        return res
+    
     _inherit = "sale.order.line"    
     _columns = {
             'product_dsp_id'    : fields.many2one('product.product', 'Product', domain=[('sale_ok', '=', True)], change_default=True),
@@ -289,7 +352,8 @@ class sale_order_line(osv.osv):
             'jkt_cost'          : fields.float('JKT Cost', digits_compute=dp.get_precision('Product Price')),
             'profit'            : fields.float('Profit', digits_compute=dp.get_precision('Product Price')),
             'sub_profit'        : fields.float('Sub Profit', digits_compute=dp.get_precision('Product Price')),
-            'fee'               : fields.float('Fee', digits_compute=dp.get_precision('Product Price')),
+            'fee'               : fields.float('Misc. Fee', digits_compute=dp.get_precision('Product Price')),
+            'total_discount'    : fields.function(_amount_discount, string='Discount Total', digits_compute=dp.get_precision('Product Price')),
             'price_subtotal'    : fields.function(_amount_line, string='Subtotal', digits_compute= dp.get_precision('Account')),
                 }
     
@@ -547,6 +611,7 @@ class sale_order_line(osv.osv):
                 'quantity': uosqty,
                 'discount': line.discount,
                 'fee' : line.fee,
+                'total_discount' : line.total_discount,
                 'uos_id': uos_id,
                 'product_id': line.product_id.id or False,
                 'invoice_line_tax_id': [(6, 0, [x.id for x in line.tax_id])],

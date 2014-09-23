@@ -88,6 +88,7 @@ class account_invoice_line(osv.osv):
         
     _columns = {
                 'fee'   : fields.float('Fee', digits_compute=dp.get_precision('Product Price')),
+                'total_discount'   : fields.float('Total Discount', digits_compute=dp.get_precision('Product Price')),
                 'price_subtotal': fields.function(_amount_line, string='Amount', type="float", digits_compute= dp.get_precision('Account'), store=True),
                 }        
     
