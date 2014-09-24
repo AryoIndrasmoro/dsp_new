@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <openerp>
 	<data>
-		
+		<!--
 		<report 
 			id="invoice_item_form" string="Invoice Form" model="account.invoice"
 			name="invoice.item.form" 
@@ -10,6 +10,6 @@
 			header="False"
 			
 			/>
-			
+		-->
 	</data>
 </openerp>

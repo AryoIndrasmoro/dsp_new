@@ -349,16 +349,13 @@
           <para style="P16">
             <font color="white"> </font>
           </para>
-        </td>
-        <td>
-          <para style="P13">:</para>
-        </td>
+        </td>        
       </tr>
     </blockTable>
     <para style="P1">
       <font color="white"> </font>
     </para>
-    <blockTable colWidths="92.0,51.0,50.0,122.0,47.0,48.0,74.0,68.0" repeatRows="1" style="Table5">
+    <blockTable colWidths="92.0,51.0,52.0,116.0,47.0,48.0,74.0,72.0" repeatRows="1" style="Table5">
       <tr>
         <td>
           <para style="P30">Product Images</para>
@@ -370,7 +367,7 @@
           <para style="P30">Vintage</para>
         </td>
         <td>
-          <para style="P30">Item Description</para>
+          <para style="P30">Description</para>
         </td>
         <td>
           <para style="P29">UOM</para>
@@ -379,7 +376,7 @@
           <para style="P31">Qty</para>
         </td>
         <td>
-          <para style="P31">Price (IDR)</para>
+          <para style="P31">Price (Rp)</para>
         </td>
         <td>
           <para style="P31">Amount</para>
@@ -389,7 +386,7 @@
     <section>
       <para style="P25">[[ repeatIn([line for line in picking.move_lines if (line.state == 'confirmed' or line.state=='done' or line.state=='assigned')],'move_lines') ]]</para>
       <para style="P25">[[ (picking.move_lines!=[] and removeParentNode('para')) or removeParentNode('section')]]</para>
-      <blockTable colWidths="92.0,51.0,50.0,122.0,47.0,48.0,73.0,68.0" style="Table1">
+      <blockTable colWidths="92.0,51.0,52.0,116.0,47.0,48.0,74.0,72.0" style="Table1">
         <tr>
           <td>
             <para style="P26">[[ move_lines.product_id.image and setTag('para','image',{'width':'60','height':'80'}) ]] [[ move_lines.product_id.image ]]</para>
@@ -413,47 +410,9 @@
             <para style="P24">[[ move_lines.price_unit ]]</para>
           </td>
           <td>
-            <para style="P24">[[ get_product_desc(move_lines) ]]</para>
+            <para style="P24">[[ formatLang(get_product_desc(move_lines)) ]]</para>
           </td>
-        </tr>
-        <tr>
-          <td>
-            <para style="P26">
-              <font color="white"> </font>
-            </para>
-          </td>
-          <td>
-            <para style="P27">
-              <font color="white"> </font>
-            </para>
-          </td>
-          <td>
-            <para style="P27">
-              <font color="white"> </font>
-            </para>
-          </td>
-          <td>
-            <para style="P28">
-              <font color="white"> </font>
-            </para>
-          </td>
-          <td>
-            <para style="P27">Total</para>
-          </td>
-          <td>
-            <para style="P24">[[ get_total_qty(picking) ]]</para>
-          </td>
-          <td>
-            <para style="P24">
-              <font color="white"> </font>
-            </para>
-          </td>
-          <td>
-            <para style="P24">
-              <font color="white"> </font>
-            </para>
-          </td>
-        </tr>
+        </tr>        
       </blockTable>
     </section>
     <para style="P22">

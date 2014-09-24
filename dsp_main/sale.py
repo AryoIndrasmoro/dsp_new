@@ -93,7 +93,7 @@ class sale_order(osv.osv):
                'file_confirmed_order'   : fields.binary('Sales Order File'),
                'dsp_price_list_id'      : fields.selection([('Real Price', 'Real Price'), ('Outlet Price', 'Outlet Price')], 'DSP Price List'),
                
-               'total_fee' : fields.function(_amount_all, string='Total Fee', digits_compute=dp.get_precision('Account'), 
+               'total_fee' : fields.function(_amount_all, string='Total Misc. Fee', digits_compute=dp.get_precision('Account'), 
                     store={
                         'sale.order': (lambda self, cr, uid, ids, c={}: ids, ['order_line'], 10),
                         'sale.order.line': (_get_order, ['price_unit', 'tax_id', 'discount', 'product_uom_qty'], 10),

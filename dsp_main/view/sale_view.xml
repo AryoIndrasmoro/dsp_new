@@ -106,7 +106,7 @@
         			<field name="name" string="Product"/>
         		</xpath>
         		<xpath expr="/form/sheet/notebook/page[@string='Order Lines']/field[@name='order_line']/tree/field[@name='discount']" position="after">
-        			<field name="fee" string="Fee"/>
+        			<field name="fee"/>
         			<field name="total_discount" string="Total Discount"/>
         		</xpath>
             </field>
