@@ -152,6 +152,20 @@ class product_template(osv.osv):
                         }
         return res
     
+    def _compute_reserved_qty(self, cr, uid, ids, field_names, args, context=None):
+        print """Compute the amounts in the currency of the user
+        """
+        total_reserved = 0.0
+        if context is None:
+            context={}
+        res = {}
+        for product in self.browse(cr, uid, ids, context=context):
+            for reserved in product.qty_reserved:
+                total_reserved += reserved.reserved_qty
+                print total_reserved
+                                            
+            res[product.id] = total_reserved
+        return res
     
     _columns = {
             'name'              : fields.char('Name', size=128, required=True, translate=True, select=True, change_default=True),
@@ -170,7 +184,9 @@ class product_template(osv.osv):
             'base_cost'         : fields.float('SG Cost', digits_compute=dp.get_precision('Product Price')),
             'margin'            : fields.float('Margin (%)', digits_compute=dp.get_precision('Product Price')),
             'suggest_price'     : fields.function(_compute_suggest_price, string="Suggested Price", type='float', digits_compute=dp.get_precision('Product Price'), multi="_compute_amounts"),                            
-            'real_price'        : fields.float('Product Real Price', digits_compute=dp.get_precision('Product Price')),                                
+            'real_price'        : fields.float('Product Real Price', digits_compute=dp.get_precision('Product Price')),
+            'qty_reserved'      : fields.one2many('product.reserved.qty', 'product_id', 'Qty Reserved'),
+            'total_reserved'    : fields.function(_compute_reserved_qty, string="Reserved Qty", type='float', digits_compute=dp.get_precision('Product Unit of Measure')),                         
             #'real_price'    : fields.function(_compute_suggest_price, string="Real Price", type='float', digits_compute=dp.get_precision('Account'), multi="_compute_amounts"),
                 }
     
@@ -178,3 +194,16 @@ class product_template(osv.osv):
         'foc'   : 'Regular',                    
     }
 product_template()
+
+class product_reserved_qty(osv.osv):
+    _name = "product.reserved.qty"
+    _description = "Product Reserved Qty"            
+    
+    _columns = {
+            'product_id'        : fields.many2one('product.product', 'Product'),
+            'outlet'            : fields.many2one('res.partner', 'Outlet', required=True, domain=[('customer','=',True)]),
+            'reserved_qty'      : fields.float('Reserved Qty', digits_compute=dp.get_precision('Product Unit of Measure'), required=True),
+            'reserved_date'     : fields.date('Reserved Date', required=True),                
+            'delivery_date'     : fields.date('Delivery Date'),               
+        }                        
+product_reserved_qty()

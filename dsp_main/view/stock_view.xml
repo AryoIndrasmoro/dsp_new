@@ -5,7 +5,10 @@
 			 <field name="name">stock.picking.form.dsp</field>
 			 <field name="model">stock.picking</field>
 			 <field name="inherit_id" ref="stock.view_picking_form"/>
-			 <field name="arch" type="xml">	 	
+			 <field name="arch" type="xml">	 				 	                   
+                <button name="force_assign" position="replace">                                    
+                	<button name="force_assign" states="confirmed" string="Force Availability" type="object" class="oe_highlight" groups="base.group_user" invisible="1"/>
+                </button>
 			 	<field name="origin" position="after">
 			 		<field name="internal_move_type"/>
 			 	</field>			 	
@@ -101,11 +104,14 @@
 			 </field>
 		</record>
 						
-		<record id="view_picking_out_form_dsp" model="ir.ui.view">
-			 <field name="name">stock.picking.out.form.dsp</field>
+		<record id="view_picking_out_form_dsp1" model="ir.ui.view">
+			 <field name="name">stock.picking.out.form.dsp1</field>
 			 <field name="model">stock.picking.out</field>
 			 <field name="inherit_id" ref="stock.view_picking_form"/>
-			 <field name="arch" type="xml">			 		
+			 <field name="arch" type="xml">	
+			 	<button name="force_assign" position="replace">                                    
+                	<button name="force_assign" states="confirmed" string="Force Availability" type="object" class="oe_highlight" groups="base.group_user" invisible="1"/>
+                </button>		 		
 			 	<field name="partner_id" position="after">
 			 		<field name="sale_id"/>
 			 	</field>

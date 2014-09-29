@@ -62,7 +62,7 @@ class sale_order(osv.osv):
         elif sale_type == 'Direct Selling':
             sale_type = 'Direct Selling'
         else:
-            sale_type = 'Promo'            
+            sale_type = 'FOC'            
         
         return {
             'name': pick_name,
@@ -84,7 +84,7 @@ class sale_order(osv.osv):
     _columns ={
                'payment_term'           : fields.many2one('account.payment.term', 'Payment Term', required = True),
                'partner_id'             : fields.many2one('res.partner', 'Outlet/Customer', readonly=True, states={'draft': [('readonly', False)], 'sent': [('readonly', False)]}, required=True, change_default=True, select=True, track_visibility='always'),
-               'sale_type'              : fields.selection([('Promo', 'Promo'), ('Consignment', 'Consignment'),('Direct Selling','Direct Selling') ], 'Sale Type'),
+               'sale_type'              : fields.selection([('FOC', 'FOC'), ('Consignment', 'Consignment'),('Direct Selling','Direct Selling') ], 'Sale Type'),
                'person_name'            : fields.char('Person Name', size=128),
                'date_confirmed'         : fields.date('Input Date'),
                'file_confirmed'         : fields.binary('Quotation File'),
@@ -355,6 +355,8 @@ class sale_order_line(osv.osv):
             'fee'               : fields.float('Misc. Fee', digits_compute=dp.get_precision('Product Price')),
             'total_discount'    : fields.function(_amount_discount, string='Discount Total', digits_compute=dp.get_precision('Product Price')),
             'price_subtotal'    : fields.function(_amount_line, string='Subtotal', digits_compute= dp.get_precision('Account')),
+            'qty_on_hand'       : fields.float('Qty On Hand', digits_compute=dp.get_precision('Product Unit of Measure')),
+            'qty_reserved'      : fields.float('Qty Reserved', digits_compute=dp.get_precision('Product Unit of Measure')),
                 }
     
     def product_id_change(self, cr, uid, ids, pricelist, product, qty=0,
@@ -475,9 +477,12 @@ class sale_order_line(osv.osv):
                 }            
             return result
         
-        partner_id = self.pool.get('res.partner').browse(cr, uid, partner_id, context=None)
+        partner_id = self.pool.get('res.partner').browse(cr, uid, partner_id, context=None)        
         product = self.pool.get('product.template').browse(cr, uid, product_dsp_id, context=None)
         product_product = self.pool.get('product.product').browse(cr, uid, product_dsp_id, context=None)
+        
+        qty_on_hand = product_product.qty_available
+        qty_reserved = product_product.total_reserved
         
         if sale_type == 'Consignment':            
             stock_search  = self.pool.get('stock.picking').search(cr, uid, [('type','=','internal'),('partner_id', '=', partner_id.id)], context=None)
@@ -498,24 +503,21 @@ class sale_order_line(osv.osv):
                     price_unit = line.price_unit_view                                        
                 else:
                     raise osv.except_osv(_('Warning Confirmation !'), _('This Internal moves has no line contains the product!"'))
-                    price_unit = 0
-            
+                    price_unit = 0                                                                            
+        
+        else:                                                         
+            products = self.pool.get('product.product').browse(cr, uid, product_dsp_id, context=None)
             country = products.country_id.name
             print country              
                                     
             outlet_disc_id = self.pool.get('outlet.discount').search(cr, uid, [('outlet_id','=',partner_id.id),('country_id', '=', country)], context=None)
             if outlet_disc_id:
                 outlet_disc_obj = self.pool.get('outlet.discount').browse(cr, uid, outlet_disc_id, context=None)            
-                discount = outlet_disc_obj[0].discount
-            else:        
-                discount = partner_id.consignment_discount                                                        
-        
-        else:    
-            if sale_type == 'Promo':
+                discount = outlet_disc_obj[0].discount - partner_id.consignment_discount            
+            
+            if sale_type == 'FOC':
                 discount = 100
-            else:
-                discount = 0                
-                                  
+            
             profit = (product.real_price - (discount * product.real_price / 100) - product.jkt_cost)
             sub_profit = profit * product_uom_qty        
             price_unit = product.real_price          
@@ -524,13 +526,15 @@ class sale_order_line(osv.osv):
                 price_unit = 0  
             
         result = {'value': {
-                    'product_id' : product_dsp_id,
-                    'price_unit' : price_unit,     
-                    'discount'   : discount,
-                    'jkt_cost'   : product.jkt_cost,
-                    'profit'     : profit,
-                    'sub_profit' : sub_profit,
-                    'cons_doc'   : stock_default,                                                    
+                    'product_id'    : product_dsp_id,
+                    'price_unit'    : price_unit,     
+                    'discount'      : discount,
+                    'jkt_cost'      : product.jkt_cost,
+                    'profit'        : profit,
+                    'sub_profit'    : sub_profit,
+                    'cons_doc'      : stock_default,     
+                    'qty_on_hand'   : qty_on_hand,
+                    'qty_reserved'  : qty_reserved                                               
                     }
                 } 
         return result 

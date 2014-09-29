@@ -21,6 +21,7 @@
 
 from openerp import tools
 from openerp.osv import fields, osv
+import openerp.addons.decimal_precision as dp
 
 class pricelist_report(osv.osv):
     _name = "pricelist.report"
@@ -29,8 +30,14 @@ class pricelist_report(osv.osv):
     #_rec_name = 'date'
     _columns = {
         'id': fields.text('Date Order', readonly=True),
-        'name_template': fields.text('Date Order', readonly=True),
-        'volume_l': fields.text('Date Order', readonly=True),
+        'name': fields.char('Order No', readonly=True),        
+        'sale_type': fields.char('Sale Type', readonly=True),
+        'date_order': fields.date('Date Order', readonly=True),
+        'amount_total': fields.float('Amount Total', digits_compute=dp.get_precision('Product Price'), readonly=True),
+        'qty': fields.float('Qty', digits_compute=dp.get_precision('Product Unit of Measure'), readonly=True),
+        'partner_name': fields.char('Outlet', readonly=True),
+        'product_name': fields.char('Product', readonly=True),
+        'product_type': fields.char('Product Type', readonly=True),
     }
     #_order = 'date desc'
 
@@ -39,12 +46,26 @@ class pricelist_report(osv.osv):
         cr.execute("""
             create or replace view pricelist_report as (
                 select
-                    id,
-                    name_template,
-                    volume_l
+                    p.name_template as product_name,
+                    pt.foc as product_type,
+                    s.id,
+                    s.name,
+                    s.sale_type,
+                    s.date_order,
+                    s.amount_total,                    
+                    sl.product_uom_qty as qty,
+                    r.name as partner_name
                 from
-                    product_product
-
+                    sale_order s, 
+                    sale_order_line sl, 
+                    product_product p, 
+                    product_template pt,
+                    res_partner r
+                where 
+                    sl.order_id = s.id and
+                    sl.product_id = p.id and                            
+                    sl.product_id = pt.id and
+                    s.partner_id = r.id
             )
         """)
 pricelist_report()

@@ -57,6 +57,11 @@
         			<field name="product_dsp_id" on_change="onchange_product_dsp_id(product_dsp_id, product_uom_qty, parent.sale_type, parent.dsp_price_list_id, parent.partner_id)"/>           		
         		</xpath>        
         		
+        		<field name="product_dsp_id" position="after">
+        			<field name="qty_on_hand" readonly="1"/>
+        			<field name="qty_reserved" readonly="1"/>
+        		</field>
+        		
         		<xpath expr="//form/sheet/group/group/field[@name='partner_id']" position="replace">
         			<field name="partner_id" on_change="onchange_partner_id_dsp(sale_type, partner_id, context)" domain="[('customer','=',True)]" context="{'search_default_customer':1, 'show_address': 1}" options='{"always_reload": True}'/>           		
         		</xpath>
@@ -70,7 +75,7 @@
             <field name="model">sale.order</field>
             <field name="inherit_id" ref="sale.view_order_form"/>
             <field name="arch" type="xml">
-            	<data>            		
+            	<data>            		            		
             		<div name="discount" groups="sale.group_discount_per_so_line" position="after">
             			<field name="fee"/>
                         <field name="cons_doc" readonly="1" 
@@ -78,7 +83,12 @@
                         <field name="jkt_cost" invisible="1"/>                        
                         <field name="profit" invisible="1"/>
                         <field name="sub_profit" invisible="1"/>                        	            			           	
-                    </div>
+                    </div>              
+                    <div name="discount" groups="sale.group_discount_per_so_line" position="replace">
+                        <div name="discount" groups="sale.group_discount_per_so_line">
+                            <field name="discount" class="oe_inline" readonly="1"/>
+                        </div>
+                    </div>      
             	</data>
             </field>
     	</record>    	    	

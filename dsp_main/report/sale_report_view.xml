@@ -1,36 +1,48 @@
 <?xml version="1.0" encoding="utf-8"?>
 <openerp>
-<data>
-
-
-
+<data>		                    	  
     <record id="view_product_list_tree" model="ir.ui.view">
         <field eval="1" name="priority"/>
         <field name="name">pricelist.report.tree</field>
         <field name="model">pricelist.report</field>
         <field name="arch" type="xml">
             <tree string="Product List" create="false">
-                <field name="id" />
-                <field name="name_template" />
-                <field name="volume_l" />
+            	<field name="product_name" />
+            	<field name="product_type" />
+            	<field name="qty" />
+                <field name="name" />               
+                <field name="partner_name" />                    
+                <field name="date_order" />      
+                <field name="amount_total" />                                                                                           
             </tree>
         </field>
     </record>
 
-
+	<record id="view_order_product_pricelist_search" model="ir.ui.view">
+        <field name="name">product.pricelist.report.search</field>
+        <field name="model">pricelist.report</field>
+        <field name="arch" type="xml">
+            <search string="Sales Analysis">                                
+                <group expand="1" string="Group By...">                    
+                    <filter string="Sale Type" name="sale_type" icon="terp-personal" context="{'group_by':'sale_type'}"/>                    
+                </group>
+            </search>
+        </field>
+    </record>
+    
     <record id="action_product_list_report_analysis" model="ir.actions.act_window">
-        <field name="name">Sales Analysis</field>
+        <field name="name">Sales Type Analysis</field>
         <field name="res_model">pricelist.report</field>
         <field name="view_type">form</field>
         <field name="view_mode">tree</field>
-        <!-- <field name="search_view_id" ref="view_product_list_search"/> -->
+        <field name="search_view_id" ref="view_order_product_pricelist_search"/>        
         <field name="view_id" ref="view_product_list_tree"/>
-<!--         <field name="context">{'search_default_year':1,'search_default_month':1,'search_default_User':1,'group_by_no_leaf':1,'group_by':[]}</field> -->
+        <field name="context">{"search_default_sale_type":1}</field>
         <field name="help">This report performs analysis on your quotations and sales orders. Analysis check your sales revenues and sort it by different group criteria (salesman, partner, product, etc.) Use this report to perform analysis on sales not having invoiced yet. If you want to analyse your turnover, you should use the Invoice Analysis report in the Accounting application.</field>
     </record>
 
     <menuitem id="next_id_65" name="Report Sales Analysis" parent="base.menu_reporting" sequence="1" groups="base.group_sale_manager"/>
-    <menuitem action="action_product_list_report_analysis" id="menu_report_product_all" parent="next_id_65"/>
+    <menuitem action="action_product_list_report_analysis" id="menu_report_product_all" parent="base.next_id_64"/>
     
 </data>
 </openerp>

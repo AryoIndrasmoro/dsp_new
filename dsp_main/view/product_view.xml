@@ -5,7 +5,7 @@
 			<field name="name">product.normal.form.inherit</field>
 			<field name="model">product.product</field>
 			<field name="inherit_id" ref="product.product_normal_form_view"/>
-			<field name="arch" type="xml">
+			<field name="arch" type="xml">				
 				<page string="Information" position="after">
 					<page string="Wine Description">
 						<group>
@@ -50,7 +50,27 @@
 		                	</group>
 	                	</group>               
 	                </page>
-	            </xpath>	            
+	            </xpath>
+	            <xpath expr="/form/sheet/notebook/page[@string='Inventory']" position="after">
+	                <page string="Reserved Qty">
+	                	<group>
+	                		<field name="qty_reserved" nolabel="1">
+	                			<tree>
+			        				<field name="outlet"/>
+	        						<field name="reserved_qty"/>
+	        						<field name="reserved_date"/>
+	        						<field name="delivery_date"/>		        					            		
+	        					</tree>
+	        					<form>
+			        				<field name="outlet"/>
+	        						<field name="reserved_qty"/>
+	        						<field name="reserved_date"/>
+	        						<field name="delivery_date"/>            			
+	        					</form>
+	                		</field>
+	                	</group>               
+	                </page>
+	            </xpath>	 	            		            
 			</field>			
 		</record>		
 	    
@@ -113,6 +133,9 @@
                 <field name="virtual_available" position="after">
                 	<field name="real_price"/>
                 	<field name="foc"/>             
+                </field>
+                <field name="virtual_available" position="before">
+                	<field name="total_reserved"/>                	    
                 </field>
             </field>
        	</record>
@@ -219,6 +242,36 @@
             	</search>            	
             </field>            	
         </record>                     	
+        
+        <record id="product_list_search_form_view" model="ir.ui.view">
+            <field name="name">product.list.search.form</field>
+            <field name="model">product.template</field>            
+            <field name="arch" type="xml">
+            	<search string="Products">
+            		<group string="Filter">
+            			<field name="name" string="Product Name" filter_domain="[('name','ilike',self)]"/>
+            			<field name="vintages" string="Vintages" filter_domain="[('vintages','ilike',self)]"/>
+            			<field name="volume_l" string="Volume L" filter_domain="[('volume_l','ilike',self)]"/>            			
+            		</group>
+					<group string="Group By..">
+						<filter string='Vintage' icon="terp-stock_symbol-selection" domain="[]" context="{'group_by' : 'vintages'}"/>						
+						<filter string='Volume L' icon="terp-stock_symbol-selection" domain="[]" context="{'group_by' : 'volume_l'}"/>						
+						<filter string='FOC' icon="terp-stock_symbol-selection" domain="[]" context="{'group_by' : 'foc'}"/>
+					</group>            		
+            	</search>            	
+            </field>            	
+        </record>            
+        
+        <record id="view_normal_reserved_product_form" model="ir.ui.view">
+            <field name="name">product.normal.reserved.product.form</field>
+            <field name="model">product.product</field>
+            <field name="inherit_id" ref="product.product_normal_form_view"/>
+            <field name="arch" type="xml">                
+                <xpath expr="//group[@string='Stock and Expected Variations']" position="inside">                    
+                   	<field name="total_reserved" class="oe_inline"/>                        
+                </xpath>                
+            </field>
+        </record>
         
         <record id="product_list_action_tree" model="ir.actions.act_window">
             <field name="name">Product List</field>
