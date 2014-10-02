@@ -126,6 +126,7 @@ class sale_order(osv.osv):
                     ('progress', 'Sales Order'),
                     ('order_confirm', 'Order Confirmed'),
                     ('manual', 'Sale to Invoice'),
+                    ('shipping_except', 'Shipping Exception'),
                     ('invoice_except', 'Invoice Exception'),
                     ('done', 'Done'),
                     ], 'Status', readonly=True, track_visibility='onchange',

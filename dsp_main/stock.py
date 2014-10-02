@@ -51,6 +51,7 @@ class stock_picking(osv.osv):
             context = dict(context)
         res = {}
         price_idr = 0.0
+        foc_qty = 0.0
         move_obj = self.pool.get('stock.move')
         product_obj = self.pool.get('product.product')
         currency_obj = self.pool.get('res.currency')
@@ -133,21 +134,22 @@ class stock_picking(osv.osv):
                         move_line_pool.create(cr, uid, move_line)
                         
                         move_pool.post(cr, uid, [move_id], context={})
-            
-        
+                            
                 for move in pick.move_lines:                                        
                     if pick.type == "in":
                         purchase_obj_id = self.pool.get('purchase.order.line').search(cr, uid, [('order_id','=',pick.purchase_id.id),('product_id','=',move.product_id.id)])
                         purchase_obj = self.pool.get('purchase.order.line').browse(cr, uid, purchase_obj_id, context=None)                                    
-                        price_idr = purchase_obj[0].price_idr                        
+                        price_idr = purchase_obj[0].price_idr                                                                     
                                                                 
                     if move.state in ('done', 'cancel'):
                         continue
-                    partial_data = partial_datas.get('move%s' % (move.id), {})
+                    partial_data = partial_datas.get('move%s' % (move.id), {})                                    
                     product_qty = partial_data.get('product_qty', 0.0)
                     move_product_qty[move.id] = product_qty
                     product_uom = partial_data.get('product_uom', False)
                     product_price = partial_data.get('product_price', 0.0)
+                    if product_price == 0:
+                        foc_qty = product_qty                    
                     product_currency = partial_data.get('product_currency', False)
                     prodlot_id = partial_data.get('prodlot_id')
                     prodlot_ids[move.id] = prodlot_id
@@ -159,141 +161,156 @@ class stock_picking(osv.osv):
                         too_few.append(move)
                     else:
                         too_many.append(move)
+                    print "foc_qty ", foc_qty                            
                                         
-
-                # Average price computation                               
-                if (pick.type == 'in') and (move.product_id.cost_method == 'average'):
-                    print "masuk"
-                    product = product_obj.browse(cr, uid, move.product_id.id)
-                    move_currency_id = move.company_id.currency_id.id
-                    context['currency_id'] = move_currency_id
-                    qty = uom_obj._compute_qty(cr, uid, product_uom, product_qty, product.uom_id.id)
-                    
-                    if product.id in product_avail:
-                        product_avail[product.id] += qty
-                    else:
-                        product_avail[product.id] = product.qty_available
-
-                    if qty > 0:
-                        new_price = currency_obj.compute(cr, uid, product_currency,
-                                move_currency_id, price_idr)
-                        new_price = uom_obj._compute_price(cr, uid, product_uom, new_price,
-                                product.uom_id.id)
-                        new_price = price_idr
-                        #if product.qty_available <= 0:
-                        print "masuk 2"
-                        if product.qty_available < 0:
-                            print "masuk 3"
-                            new_std_price = new_price
-                        else:
-                            print "masuk 4"
-                            # Get the standard price                            
-                            amount_unit = product.price_get('standard_price', context=context)[product.id]
-                            new_std_price = ((amount_unit * product_avail[product.id])\
-                                + (price_idr * qty)) / (product_avail[product.id] + qty)
-                            
-                            print "aaaaaaaa", amount_unit
-                            print "bbbbbbbb", product_avail[product.id]
-                            print "cccccccc", qty
-                            print "dddddddd", new_price                            
-                            print "new price", new_std_price
-                            # Cost Component
-                            
-                            if pick.additional_cost == 'yes':
-                                print "masuk 5"
-                                #########Change
-                                #cr.execute("select sum(product_qty) from stock_move where picking_id = %s" % pick.id)
-                                #total_qty = cr.fetchone()[0]
-                                
-                                ### Total Partial Data
-                                total_qty = 0.0
-                                for move in pick.move_lines:
-                                    partial_data = partial_datas.get('move%s' % (move.id), {})
-                                    product_qty = partial_data.get('product_qty', 0.0)                                    
-                                    total_qty += product_qty
-                                
-                                # print "total_qty>>>>>>>>>>>>>>>>>>", total_qty, total_credit, total_credit * (qty/total_qty)
-                                cost_component_each_item = total_credit * (qty/total_qty) or 0.0                                
-                                new_std_price = ((amount_unit * product_avail[product.id])\
-                                    + (new_price * qty) + cost_component_each_item) / (product_avail[product.id] + qty)
-                                
-                                print "amount_unit", amount_unit
-                                print "product_avail", product_avail[product.id]
-                                print "new_price", new_price
-                                print "qty", qty           
-                                print "new_std_price", new_std_price                     
-                                                            
-                                
-                                #print "new_std_price", new_std_price    
-                                                                                   
-                            
-                            
-                                
-                        # Write the field according to price type field
-                        #product_obj.write(cr, uid, [product.id], {'standard_price': new_std_price})
+                    # Average price computation                               
+                    if (pick.type == 'in') and (move.product_id.cost_method == 'average'):
+                        print "masuk"
+                        product = product_obj.browse(cr, uid, move.product_id.id)
+                        move_currency_id = move.company_id.currency_id.id
+                        context['currency_id'] = move_currency_id
+                        qty = uom_obj._compute_qty(cr, uid, product_uom, product_qty, product.uom_id.id)
+                        qty = qty - foc_qty
                         
-                        product_obj.write(cr, uid, [product.id], {
-                                                                  'standard_price'  : new_std_price,
-                                                                  'list_price'      : new_std_price,
-                                                                  'base_cost'       : new_std_price,                                                                                                                                                                                                                                                                                              
-                                                                  })
-
-                        # Record the values that were chosen in the wizard, so they can be
-                        # used for inventory valuation if real-time valuation is enabled.
-                        move_obj.write(cr, uid, [move.id],
-                                {'price_unit': product_price,
-                                 'price_currency_id': product_currency})
-                
-                # Internal Update Cost Price
-                elif (pick.type == 'internal') and (move.product_id.cost_method == 'average') and (pick.internal_move_type == 'overseas'):                                                       
-                    product = product_obj.browse(cr, uid, move.product_id.id)
-                    #move_currency_id = move.company_id.currency_id.id
-                    #context['currency_id'] = move_currency_id
-                    qty = uom_obj._compute_qty(cr, uid, product_uom, product_qty, product.uom_id.id)
-                    total_qty = 0.0
-                    #if pick.additional_cost_int == 'yes':
-                    product = product_obj.browse(cr, uid, move.product_id.id)
-                    amount_unit = product.price_get('standard_price', context=context)[product.id]
-                    product_avail[product.id] = product.qty_available                        
+                        print "this is the real qty ", qty
+                        if product.id in product_avail:
+                            product_avail[product.id] += qty
+                        else:
+                            product_avail[product.id] = product.qty_available
+    
+                        if qty > 0:
+                            new_price = currency_obj.compute(cr, uid, product_currency,
+                                    move_currency_id, price_idr)
+                            new_price = uom_obj._compute_price(cr, uid, product_uom, new_price,
+                                    product.uom_id.id)
+                            new_price = price_idr
+                            #if product.qty_available <= 0:
+                            print "masuk 2"
+                            if product.qty_available < 0:
+                                print "masuk 3"
+                                new_std_price = new_price
+                            else:
+                                print "masuk 4"
+                                # Get the standard price                            
+                                amount_unit = product.price_get('standard_price', context=context)[product.id]
+                                new_std_price = ((amount_unit * product_avail[product.id])\
+                                    + (price_idr * qty)) / (product_avail[product.id] + qty)
+                                
+                                print "aaaaaaaa", amount_unit
+                                print "bbbbbbbb", product_avail[product.id]
+                                print "cccccccc", qty
+                                print "dddddddd", new_price                            
+                                print "new price", new_std_price
+                                # Cost Component
+                                
+                                if pick.additional_cost == 'yes':
+                                    print "masuk 5"
+                                    #########Change
+                                    #cr.execute("select sum(product_qty) from stock_move where picking_id = %s" % pick.id)
+                                    #total_qty = cr.fetchone()[0]
+                                    
+                                    ### Total Partial Data
+                                    total_qty = 0.0
+                                    for move in pick.move_lines:
+                                        partial_data = partial_datas.get('move%s' % (move.id), {})
+                                        product_qty = partial_data.get('product_qty', 0.0)                                    
+                                        product_id = partial_data.get('product_id', False)
+                                        prod = product_obj.browse(cr, uid, product_id)                                                            
+                                        if prod.foc == 'Regular':                                                                                                    
+                                            total_qty += product_qty
+                                    
+                                    print "total qty ", total_qty
+                                    # print "total_qty>>>>>>>>>>>>>>>>>>", total_qty, total_credit, total_credit * (qty/total_qty)
+                                    cost_component_each_item = total_credit / (total_qty or 0.0)                                
+                                    new_std_price = ((amount_unit * product_avail[product.id])\
+                                        + (new_price * qty) + cost_component_each_item) / (product_avail[product.id] + qty)
+                                    
+                                    print "cost component ", cost_component_each_item
+                                    print "amount_unit", amount_unit
+                                    print "product_avail", product_avail[product.id]
+                                    print "new_price", new_price
+                                    print "qty", qty           
+                                    print "new_std_price", new_std_price                     
+                                                                
+                                    
+                                    #print "new_std_price", new_std_price    
+                                                                                       
+                                
+                                
+                                    
+                            # Write the field according to price type field
+                            #product_obj.write(cr, uid, [product.id], {'standard_price': new_std_price})
+                            
+                            product_obj.write(cr, uid, [product.id], {
+                                                                      'standard_price'  : new_std_price,
+                                                                      'list_price'      : new_std_price,
+                                                                      'base_cost'       : new_std_price,                                                                                                                                                                                                                                                                                              
+                                                                      })
+    
+                            # Record the values that were chosen in the wizard, so they can be
+                            # used for inventory valuation if real-time valuation is enabled.
+                            move_obj.write(cr, uid, [move.id],
+                                    {'price_unit': product_price,
+                                     'price_currency_id': product_currency})
                     
-                    ####Change
-                    #cr.execute("select sum(product_qty) from stock_move where picking_id = %s" % pick.id)
-                    #total_qty = cr.fetchone()[0]
-                                            
-                    for move in pick.move_lines:
-                        partial_data = partial_datas.get('move%s' % (move.id), {})
-                        product_qty = partial_data.get('product_qty', 0.0)                    
-                        total_qty += product_qty
-                                        
-                    result_jkt_cost = 0.0    
-                    real_price = 0.0                    
-                    cost_component_each_item = total_credit / (qty) or 0.0                    
-                    result_jkt_cost = product.base_cost + cost_component_each_item
-                    if product.real_price == 0:
-                        real_price = real_price = result_jkt_cost + (result_jkt_cost * (product.margin/ 100))
-                    else:
-                        real_price = product.real_price
-                    print "jkt_cost ", product.jkt_cost,product.base_cost, cost_component_each_item                                         
-                    
-                    #=======================================================
-                    # print "amount_unit INTERNAL", amount_unit
-                    # print "product_avail INTERNAL", product_avail
-                    # #print "new_price INTERNAL", new_price
-                    # print "qty INTERNAL", qty
-                    # print "cost_component_each_item INTERNAL", cost_component_each_item
-                    # 
-                    # 
-                    # 
-                    # print "new_std_price", new_std_price
-                    #=======================================================
-                    
-                    #product_obj.write(cr, uid, [product.id], {'standard_price': new_std_price})
-                    ##EDIT TO
-                    product_obj.write(cr, uid, [product.id], {
-                                                              'jkt_cost'        : result_jkt_cost,                                                                                                                                
-                                                              'real_price'      : real_price,
-                                                              'standard_price'  : real_price,                                                              
-                                                              })
+                    # Internal Update Cost Price
+                    elif (pick.type == 'internal') and (move.product_id.cost_method == 'average') and (pick.internal_move_type == 'overseas'):                                                       
+                        product = product_obj.browse(cr, uid, move.product_id.id)
+                        #move_currency_id = move.company_id.currency_id.id
+                        #context['currency_id'] = move_currency_id
+                        qty = uom_obj._compute_qty(cr, uid, product_uom, product_qty, product.uom_id.id)                        
+                        total_qty = 0.0
+                        #if pick.additional_cost_int == 'yes':
+                        product = product_obj.browse(cr, uid, move.product_id.id)
+                        amount_unit = product.price_get('standard_price', context=context)[product.id]
+                        product_avail[product.id] = product.qty_available                        
+                        print product.foc
+                        if product.foc == 'FOC':
+                            qty = 0                                                                        
+                        
+                        ####Change
+                        #cr.execute("select sum(product_qty) from stock_move where picking_id = %s" % pick.id)
+                        #total_qty = cr.fetchone()[0]
+                        if qty > 0:
+                            for move in pick.move_lines:
+                                partial_data = partial_datas.get('move%s' % (move.id), {})
+                                product_qty = partial_data.get('product_qty', 0.0)                    
+                                product_price = partial_data.get('product_price', 0.0)
+                                product_id = partial_data.get('product_id', False)
+                                prod = product_obj.browse(cr, uid, product_id)
+                                print prod.foc                        
+                                if prod.foc == 'Regular':                                                                                                    
+                                    total_qty += product_qty
+                                                        
+                            result_jkt_cost = 0.0    
+                            real_price = 0.0                    
+                            cost_component_each_item = total_credit / (total_qty or 0.0)                    
+                            result_jkt_cost = product.base_cost + cost_component_each_item
+                            if product.real_price == 0:
+                                real_price = real_price = result_jkt_cost + (result_jkt_cost * (product.margin/ 100))
+                            else:
+                                real_price = product.real_price
+                            print "jkt_cost ", product.jkt_cost,product.base_cost, cost_component_each_item                                         
+                            
+                            #=======================================================
+                            # print "amount_unit INTERNAL", amount_unit
+                            # print "product_avail INTERNAL", product_avail
+                            # #print "new_price INTERNAL", new_price
+                            # print "qty INTERNAL", qty
+                            # print "cost_component_each_item INTERNAL", cost_component_each_item
+                            # 
+                            # 
+                            # 
+                            # print "new_std_price", new_std_price
+                            #=======================================================
+                            
+                            #product_obj.write(cr, uid, [product.id], {'standard_price': new_std_price})
+                            ##EDIT TO
+                            product_obj.write(cr, uid, [product.id], {
+                                                                      'jkt_cost'        : result_jkt_cost,                                                                                                                                
+                                                                      'real_price'      : real_price,
+                                                                      'standard_price'  : real_price,                                                              
+                                                                      })
 
             for move in too_few:
                 product_qty = move_product_qty[move.id]

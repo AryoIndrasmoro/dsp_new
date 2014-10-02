@@ -28,7 +28,7 @@
 							</group>										
 							<group>
 								<field name="brand"/>
-								<field name="foc"/>
+								<field name="foc"/>								
 							</group>
 						</group>
 					</page>

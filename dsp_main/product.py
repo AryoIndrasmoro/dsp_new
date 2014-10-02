@@ -186,7 +186,7 @@ class product_template(osv.osv):
             'suggest_price'     : fields.function(_compute_suggest_price, string="Suggested Price", type='float', digits_compute=dp.get_precision('Product Price'), multi="_compute_amounts"),                            
             'real_price'        : fields.float('Product Real Price', digits_compute=dp.get_precision('Product Price')),
             'qty_reserved'      : fields.one2many('product.reserved.qty', 'product_id', 'Qty Reserved'),
-            'total_reserved'    : fields.function(_compute_reserved_qty, string="Reserved Qty", type='float', digits_compute=dp.get_precision('Product Unit of Measure')),                         
+            'total_reserved'    : fields.function(_compute_reserved_qty, string="Reserved Qty", type='float', digits_compute=dp.get_precision('Product Unit of Measure')),                                    
             #'real_price'    : fields.function(_compute_suggest_price, string="Real Price", type='float', digits_compute=dp.get_precision('Account'), multi="_compute_amounts"),
                 }
     
