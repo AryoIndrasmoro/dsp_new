@@ -87,15 +87,11 @@ class product_product(osv.osv):
         def _name_get(d):
             name = d.get('name','')
             code = d.get('default_code',False)
-            vintage = d.get('vintages',False)
-            foc = d.get('foc',False)            
+            vintage = d.get('vintages',False)                
             if code:
                 name = '[%s] %s' % (code,name)
             if vintage:
-                name = name + ' - ' + str(vintage)
-            
-            if foc == 'FOC':
-                name = name + ' - FOC'
+                name = name + ' - ' + str(vintage)                    
             #else:
             #    name = name + ' - NV'
             if d.get('variants'):
@@ -114,8 +110,7 @@ class product_product(osv.osv):
                               'name': s.product_name or product.name,
                               'default_code': s.product_code or product.default_code,
                               'variants': product.variants,
-                              'vintages': product.vintages,
-                              'foc' : product.foc
+                              'vintages': product.vintages,                              
                               }
                     result.append(_name_get(mydict))
             else:
@@ -124,8 +119,7 @@ class product_product(osv.osv):
                           'name': product.name,
                           'default_code': product.default_code,
                           'variants': product.variants,
-                          'vintages': product.vintages,
-                          'foc' : product.foc
+                          'vintages': product.vintages,                          
                           }
                 result.append(_name_get(mydict))
         return result
