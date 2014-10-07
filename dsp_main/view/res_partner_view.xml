@@ -280,6 +280,7 @@
 	                <field name="outlet_margin" invisible="1"/>
                	</field>            
             </field>
-        </record>
+        </record>               
+		
 	</data>
 </openerp>

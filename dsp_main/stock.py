@@ -562,3 +562,331 @@ class stock_move(osv.osv):
         return {'value': result}            
 
 stock_move()    
+
+class product_product(osv.osv):
+    _inherit = 'product.product'
+        
+    def get_product_available(self, cr, uid, ids, context=None):
+        """ Finds whether product is available or not in particular warehouse.
+        @return: Dictionary of values
+        """        
+        
+        if context is None:
+            context = {}
+        
+        location_obj = self.pool.get('stock.location')
+        warehouse_obj = self.pool.get('stock.warehouse')
+        shop_obj = self.pool.get('sale.shop')
+        
+        states = context.get('states',[])
+        what = context.get('what',())
+        if not ids:
+            ids = self.search(cr, uid, [])
+        res = {}.fromkeys(ids, 0.0)
+        if not ids:
+            return res
+
+        if context.get('shop', False):
+            warehouse_id = shop_obj.read(cr, uid, int(context['shop']), ['warehouse_id'])['warehouse_id'][0]
+            if warehouse_id:
+                context['warehouse'] = warehouse_id
+
+        if context.get('warehouse', False):
+            lot_id = warehouse_obj.read(cr, uid, int(context['warehouse']), ['lot_stock_id'])['lot_stock_id'][0]
+            if lot_id:
+                context['location'] = lot_id
+
+        if context.get('location', False):
+            if type(context['location']) == type(1):
+                location_ids = [context['location']]
+            elif type(context['location']) in (type(''), type(u'')):
+                location_ids = location_obj.search(cr, uid, [('name','ilike',context['location'])], context=context)
+            else:
+                location_ids = context['location']
+        else:
+            location_ids = []
+            wids = warehouse_obj.search(cr, uid, [], context=context)
+            if not wids:
+                return res
+            for w in warehouse_obj.browse(cr, uid, wids, context=context):
+                location_ids.append(w.lot_stock_id.id)
+
+        # build the list of ids of children of the location given by id
+        if context.get('compute_child',True):
+            child_location_ids = location_obj.search(cr, uid, [('location_id', 'child_of', location_ids)])
+            location_ids = child_location_ids or location_ids
+        
+        # this will be a dictionary of the product UoM by product id
+        product2uom = {}
+        uom_ids = []
+        for product in self.read(cr, uid, ids, ['uom_id'], context=context):
+            product2uom[product['id']] = product['uom_id'][0]
+            uom_ids.append(product['uom_id'][0])
+        # this will be a dictionary of the UoM resources we need for conversion purposes, by UoM id
+        uoms_o = {}
+        for uom in self.pool.get('product.uom').browse(cr, uid, uom_ids, context=context):
+            uoms_o[uom.id] = uom
+
+        results = []
+        results2 = []
+
+        from_date = context.get('from_date',False)
+        to_date = context.get('to_date',False)
+        date_str = False
+        date_values = False
+        where = [tuple(location_ids),tuple(location_ids),tuple(ids),tuple(states)]
+        if from_date and to_date:
+            date_str = "date>=%s and date<=%s"
+            where.append(tuple([from_date]))
+            where.append(tuple([to_date]))
+        elif from_date:
+            date_str = "date>=%s"
+            date_values = [from_date]
+        elif to_date:
+            date_str = "date<=%s"
+            date_values = [to_date]
+        if date_values:
+            where.append(tuple(date_values))
+
+        prodlot_id = context.get('prodlot_id', False)
+        prodlot_clause = ''
+        if prodlot_id:
+            prodlot_clause = ' and prodlot_id = %s '
+            where += [prodlot_id]
+
+        # TODO: perhaps merge in one query.
+        if 'in' in what:
+            # all moves from a location out of the set to a location in the set
+            cr.execute(
+                'select sum(product_qty), product_id, product_uom '\
+                'from stock_move '\
+                'where location_id NOT IN %s '\
+                'and location_dest_id IN %s '\
+                'and product_id IN %s '\
+                'and state IN %s ' + (date_str and 'and '+date_str+' ' or '') +' '\
+                + prodlot_clause + 
+                'group by product_id,product_uom',tuple(where))
+            results = cr.fetchall()
+        if 'out' in what:
+            # all moves from a location in the set to a location out of the set
+            cr.execute(
+                'select sum(product_qty), product_id, product_uom '\
+                'from stock_move '\
+                'where location_id IN %s '\
+                'and location_dest_id NOT IN %s '\
+                'and product_id  IN %s '\
+                'and state in %s ' + (date_str and 'and '+date_str+' ' or '') + ' '\
+                + prodlot_clause + 
+                'group by product_id,product_uom',tuple(where))
+            results2 = cr.fetchall()
+            
+        # Get the missing UoM resources
+        uom_obj = self.pool.get('product.uom')
+        uoms = map(lambda x: x[2], results) + map(lambda x: x[2], results2)
+        if context.get('uom', False):
+            uoms += [context['uom']]
+        uoms = filter(lambda x: x not in uoms_o.keys(), uoms)
+        if uoms:
+            uoms = uom_obj.browse(cr, uid, list(set(uoms)), context=context)
+            for o in uoms:
+                uoms_o[o.id] = o
+                
+        #TOCHECK: before change uom of product, stock move line are in old uom.
+        context.update({'raise-exception': False})
+        # Count the incoming quantities
+        for amount, prod_id, prod_uom in results:
+            amount = uom_obj._compute_qty_obj(cr, uid, uoms_o[prod_uom], amount,
+                     uoms_o[context.get('uom', False) or product2uom[prod_id]], context=context)
+            res[prod_id] += amount
+        # Count the outgoing quantities
+        for amount, prod_id, prod_uom in results2:
+            amount = uom_obj._compute_qty_obj(cr, uid, uoms_o[prod_uom], amount,
+                    uoms_o[context.get('uom', False) or product2uom[prod_id]], context=context)
+            res[prod_id] -= amount
+        return res
+    
+    def _product_available(self, cr, uid, ids, field_names=None, arg=False, context=None):
+        """ Finds the incoming and outgoing quantity of product.
+        @return: Dictionary of values
+        """
+        if not field_names:
+            field_names = []
+        if context is None:
+            context = {}
+        res = {}
+        for id in ids:
+            res[id] = {}.fromkeys(field_names, 0.0)
+        for f in field_names:
+            c = context.copy()
+            if f == 'qty_available':
+                c.update({ 'states': ('done',), 'what': ('in', 'out') })
+            if f == 'virtual_available':
+                c.update({ 'states': ('confirmed','waiting','assigned','done'), 'what': ('in', 'out') })
+            if f == 'incoming_qty':
+                c.update({ 'states': ('confirmed','waiting','assigned'), 'what': ('in',) })
+            if f == 'outgoing_qty':
+                c.update({ 'states': ('confirmed','waiting','assigned'), 'what': ('out',) })
+            stock = self.get_product_available(cr, uid, ids, context=c)            
+            for id in ids:
+                if f == 'qty_available':
+                    prod_obj = self.browse(cr, uid, id, context=context)
+                    qty_on_hand = stock.get(id, 0.0) - prod_obj.qty_adjusted_out + prod_obj.qty_adjusted_in                    
+                    res[id][f] = qty_on_hand                    
+                else:                                
+                    res[id][f] = stock.get(id, 0.0)
+                print res
+        return res
+    
+    _columns = {
+                'qty_available': fields.function(_product_available, multi='qty_available',
+                    type='float',  digits_compute=dp.get_precision('Product Unit of Measure'),
+                    string='Quantity On Hand',
+                    help="Current quantity of products.\n"
+                    "In a context with a single Stock Location, this includes "
+                    "goods stored at this Location, or any of its children.\n"
+                    "In a context with a single Warehouse, this includes "
+                    "goods stored in the Stock Location of this Warehouse, or any "
+                    "of its children.\n"
+                    "In a context with a single Shop, this includes goods "
+                    "stored in the Stock Location of the Warehouse of this Shop, "
+                    "or any of its children.\n"
+                    "Otherwise, this includes goods stored in any Stock Location "
+                    "with 'internal' type."),
+                }
+    
+    
+product_product()
+
+class stock_adjustment(osv.osv):
+    _name = 'stock.adjustment'    
+    _columns = {
+            'product_id'        : fields.many2one('product.product', 'Product', required=True),                    
+            'invoice_id'        : fields.many2one('account.invoice', 'Invoice Ref', required=True, domain=[('type','=','out_invoice')]),
+            'qty_on_hand'       : fields.float('Qty On Hand' , digits_compute= dp.get_precision('Product Unit Of Measure')),
+            'qty'               : fields.float('Qty to Return', digits_compute= dp.get_precision('Product Unit Of Measure')),
+            'price'             : fields.float('Price', digits_compute= dp.get_precision('Product Price')),
+            'product_id_adj'    : fields.many2one('product.product', 'Product to Adjust'),
+            'qty_on_hand_adj'   : fields.float('Qty On Hand', digits_compute= dp.get_precision('Product Unit Of Measure')),                                
+            'qty_adj'           : fields.float('Qty to Adjust', digits_compute= dp.get_precision('Product Unit Of Measure')),
+            'price_adj'         : fields.float('Price to Adjust', digits_compute= dp.get_precision('Product Price')),
+            'state'             : fields.selection(
+                                    [('draft', 'Draft'),
+                                     ('confirmed', 'Confirmed'),
+                                     ('done', 'Done'),
+                                     ('cancel', 'Cancel')], 
+                                    'Status', readonly=True),
+                }      
+    
+    _defaults = {
+                 'state' : 'draft'
+                 }  
+    
+    def onchange_invoice_id(self, cr, uid, ids, invoice_id, product_id, context=None):        
+        if not product_id:
+            val = {
+               'invoice_id' : False                
+               }            
+            raise osv.except_osv(_('Warning Confirmation !'), _('Please Choose Product First!"'))
+            return {'value' : val}
+        
+        invoice_line_id = self.pool.get('account.invoice.line').search(cr, uid, [('invoice_id','=',invoice_id),('product_id','=',product_id)], context=context)
+        invoice_line_obj = self.pool.get('account.invoice.line').browse(cr, uid, invoice_line_id)
+                
+        if invoice_line_obj:        
+            qty = invoice_line_obj[0].quantity
+            price = invoice_line_obj[0].price_unit        
+        else:
+            qty = 0.0
+            price = 0.0        
+        
+        val = {
+               'qty' : qty,
+               'price' : price
+               }
+                                                                                                                                      
+        return {'value' : val}
+    
+    def onchange_product_id(self, cr, uid, ids, invoice_id, product_id, context=None):
+        qty = 0.0
+        price = 0.0
+        qty_avail = 0.0
+                
+        if product_id:   
+            product_obj = self.pool.get('product.product').browse(cr, uid, product_id)                                    
+            qty_avail = product_obj.qty_available
+        else:
+            qty_avail = 0
+            
+        if invoice_id:                
+            invoice_line_id = self.pool.get('account.invoice.line').search(cr, uid, [('invoice_id','=',invoice_id),('product_id','=',product_id)], context=context)
+            invoice_line_obj = self.pool.get('account.invoice.line').browse(cr, uid, invoice_line_id)                         
+            
+            if invoice_line_obj:        
+                qty = invoice_line_obj[0].quantity
+                price = invoice_line_obj[0].price_unit        
+            else:
+                qty = 0.0
+                price = 0.0
+        
+        val = {
+               'qty' : qty,
+               'qty_adj' : qty,
+               'price' : price,               
+               'qty_on_hand' : qty_avail
+               }
+                                                                                                                                      
+        return {'value' : val}
+    
+    def onchange_product_id_adj(self, cr, uid, ids, product_id, context=None):
+        qty_avail = 0.0
+        real_price = 0.0
+                                        
+        if product_id:
+            product_obj = self.pool.get('product.product').browse(cr, uid, product_id)
+            qty_avail = product_obj.qty_available
+            real_price = product_obj.real_price
+        else:
+            qty_avail = 0
+            
+        val = {               
+               'qty_on_hand_adj' : qty_avail,
+               'price_adj' : real_price
+               }
+                                                                                                                                      
+        return {'value' : val}
+    
+    def adjust_stock(self, cr, uid, ids, context=None):
+        product_obj = self.pool.get('product.product')        
+        for stock_adj in self.browse(cr, uid, ids, context=context):
+            qty = stock_adj.qty
+            qty_adj = stock_adj.qty_adj
+            qty_on_hand = stock_adj.qty_on_hand
+            qty_on_hand_adj = stock_adj.qty_on_hand_adj
+            product_id = stock_adj.product_id
+            product_id_adj = stock_adj.product_id_adj
+            
+            products = self.pool.get('product.product').browse(cr, uid, product_id.id)
+            qty_adjusted_out = products.qty_adjusted_out + qty
+            qty_adjusted_in = products.qty_adjusted_in + qty_adj                    
+            
+            product_obj.write(cr, uid, [product_id.id], {
+                                                         'qty_adjusted_out'  : qty_adjusted_out,
+                                                         'qty_adjusted_in'  : qty_adjusted_in 
+                                                         })
+            
+        return True
+    
+    def stock_adjustment_confirm(self, cr, uid, ids):
+        print "masuk"
+        self.write(cr, uid, ids, {'state':'confirmed'})
+        return True
+    
+    def stock_adjustment_cancel(self, cr, uid, ids):
+        self.write(cr, uid, ids, {'state':'cancel'})
+        return True
+    
+    def stock_adjustment_done(self, cr, uid, ids):
+        self.write(cr, uid, ids, {'state':'done'})
+        return True    
+        
+stock_adjustment()

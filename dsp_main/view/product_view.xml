@@ -20,6 +20,7 @@
 							<group>
 								<field name="vintages" string="Vintage"/>	
 								<field name="classification"/>
+								<field name="ml"/>
 								<field name="grape_id"/>
 							</group>
 							<group>
@@ -268,8 +269,14 @@
             <field name="inherit_id" ref="product.product_normal_form_view"/>
             <field name="arch" type="xml">                
                 <xpath expr="//group[@string='Stock and Expected Variations']" position="inside">                    
-                   	<field name="total_reserved" class="oe_inline"/>                        
+                   	<field name="total_reserved" class="oe_inline"/>                   	                       
                 </xpath>                
+                <xpath expr="//group[@string='Stock and Expected Variations']" position="after">
+                	<group string="Stock Adjustment">                    
+	                   	<field name="qty_adjusted_in" readonly="1"/>
+	                   	<field name="qty_adjusted_out" readonly="1"/>                   	                       
+	                </group>
+                </xpath>
             </field>
         </record>
         
@@ -284,6 +291,173 @@
         
     	<menuitem action="product_list_action_tree" 
     		id="menu_product_list" parent="base.menu_product" sequence="1"/>
-    				       
+    	
+    	<record id="product_region_tree_view" model="ir.ui.view">
+            <field name="name">product.region.tree</field>
+            <field name="model">product.region</field>            
+            <field name="arch" type="xml">   
+				<tree string="Product Region" editable="bottom">					
+					<field name="name"/>
+					<field name="preface"/>					
+				</tree>
+            </field>
+        </record>
+        
+        <record id="product_region_form_view" model="ir.ui.view">
+            <field name="name">product.region.form</field>
+            <field name="model">product.region</field>            
+            <field name="arch" type="xml">   
+				<form string="Product Region">
+					<group>					
+						<field name="name"/>
+						<field name="preface"/>					
+					</group>
+				</form>
+            </field>
+        </record>
+        
+    	<record id="product_region_action_tree" model="ir.actions.act_window">
+            <field name="name">Product Region</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="res_model">product.region</field>            
+            <field name="view_type">form</field>
+          	<field name="view_id" ref="product_region_tree_view"/>                                                           
+        </record>
+        
+    	<menuitem action="product_region_action_tree" 
+    		id="menu_product_region" parent="base.menu_product" sequence="1"/>		       
+    		
+    	<record id="product_type_tree_view" model="ir.ui.view">
+            <field name="name">product.type.tree</field>
+            <field name="model">product.type</field>            
+            <field name="arch" type="xml">   
+				<tree string="Product Type" editable="bottom">					
+					<field name="name"/>									
+				</tree>
+            </field>
+        </record>
+    	    	
+    	<record id="product_type_form_view" model="ir.ui.view">
+            <field name="name">product.type.form</field>
+            <field name="model">product.type</field>            
+            <field name="arch" type="xml">   
+				<form string="Product Type">
+					<group>					
+						<field name="name"/>										
+					</group>
+				</form>
+            </field>
+        </record>
+        
+    	<record id="product_type_action_tree" model="ir.actions.act_window">
+            <field name="name">Product Type</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="res_model">product.type</field>            
+            <field name="view_type">form</field>
+          	<field name="view_id" ref="product_type_tree_view"/>                                                           
+        </record>
+        
+    	<menuitem action="product_type_action_tree" 
+    		id="menu_product_type" parent="base.menu_product" sequence="1"/>
+    		
+    	<record id="product_appelation_tree_view" model="ir.ui.view">
+            <field name="name">product.appelation.tree</field>
+            <field name="model">product.appelation</field>            
+            <field name="arch" type="xml">   
+				<tree string="Product Appelation" editable="bottom">					
+					<field name="name"/>									
+				</tree>
+            </field>
+        </record>
+    	    	
+    	<record id="product_appelation_form_view" model="ir.ui.view">
+            <field name="name">product.appelation.form</field>
+            <field name="model">product.appelation</field>            
+            <field name="arch" type="xml">   
+				<form string="Product Appelation">
+					<group>					
+						<field name="name"/>										
+					</group>
+				</form>
+            </field>
+        </record>
+        
+    	<record id="product_appelation_action_tree" model="ir.actions.act_window">
+            <field name="name">Product Appelation</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="res_model">product.appelation</field>            
+            <field name="view_type">form</field>
+          	<field name="view_id" ref="product_appelation_tree_view"/>                                                           
+        </record>
+        
+    	<menuitem action="product_appelation_action_tree" 
+    		id="menu_product_appelation" parent="base.menu_product" sequence="1"/>
+    		
+    	<record id="product_brand_tree_view" model="ir.ui.view">
+            <field name="name">product.brand.tree</field>
+            <field name="model">product.brand</field>            
+            <field name="arch" type="xml">   
+				<tree string="Product Brand" editable="bottom">					
+					<field name="name"/>									
+				</tree>
+            </field>
+        </record>
+    	    	
+    	<record id="product_brand_form_view" model="ir.ui.view">
+            <field name="name">product.brand.form</field>
+            <field name="model">product.brand</field>            
+            <field name="arch" type="xml">   
+				<form string="Product Brand">
+					<group>					
+						<field name="name"/>										
+					</group>
+				</form>
+            </field>
+        </record>
+        
+    	<record id="product_brand_action_tree" model="ir.actions.act_window">
+            <field name="name">Product Brand</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="res_model">product.brand</field>            
+            <field name="view_type">form</field>
+          	<field name="view_id" ref="product_brand_tree_view"/>                                                           
+        </record>
+        
+    	<menuitem action="product_brand_action_tree" 
+    		id="menu_product_brand" parent="base.menu_product" sequence="1"/>
+    		
+    	<record id="product_grape_tree_view" model="ir.ui.view">
+            <field name="name">product.grape.tree</field>
+            <field name="model">product.grape</field>            
+            <field name="arch" type="xml">   
+				<tree string="Product Grape" editable="bottom">					
+					<field name="name"/>									
+				</tree>
+            </field>
+        </record>
+    	    	
+    	<record id="product_grape_form_view" model="ir.ui.view">
+            <field name="name">product.grape.form</field>
+            <field name="model">product.grape</field>            
+            <field name="arch" type="xml">   
+				<form string="Product Grape">
+					<group>					
+						<field name="name"/>										
+					</group>
+				</form>
+            </field>
+        </record>
+        
+    	<record id="product_grape_action_tree" model="ir.actions.act_window">
+            <field name="name">Product Grape</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="res_model">product.grape</field>            
+            <field name="view_type">form</field>
+          	<field name="view_id" ref="product_grape_tree_view"/>                                                           
+        </record>
+        
+    	<menuitem action="product_grape_action_tree" 
+    		id="menu_product_grape" parent="base.menu_product" sequence="1"/>
+    		
     </data>
 </openerp>

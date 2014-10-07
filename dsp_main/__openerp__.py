@@ -52,6 +52,7 @@ This module covers: test
         'report/sale_report_view.xml',
         'stock_view_report.xml',      
         'invoice_view_report.xml',
+        'view/stock_adjustment_workflow.xml',
         
     ],
     #'update_xml': ['sale_analysis_report.xml'],

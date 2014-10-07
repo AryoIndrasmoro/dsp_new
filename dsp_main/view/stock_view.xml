@@ -207,7 +207,7 @@
 			 		<field name="price_unit" invisible="1"/>			 				 	
 			 	</field>   	  
 			 </field>
-			</record>
+		</record>
 			
 		<record id="view_move_picking_tree_dsp" model="ir.ui.view">
 		 <field name="name">move.picking.tree.dsp</field>
@@ -219,6 +219,63 @@
 		 	</field>   	  
 		 </field>
 		</record>
-				
+		
+		<record id="view_stock_adjustment_form" model="ir.ui.view">
+            <field name="name">stock.adjustment.form</field>
+            <field name="model">stock.adjustment</field>
+            <field name="arch" type="xml">
+                <form string="Stock Adjustment" version="7.0">
+                	<header>
+                		<button name="stock_adjustment_confirm" string="Confirm"/>
+                		<field name="state" widget="statusbar" statusbar_visible="draft,confirmed,done,cancel" statusbar_colors='{"confirmed":"blue"}' readonly="1"/>
+                	</header>                	
+                	<sheet string="Stock Adjustment">                		
+                		<group string="Product to Return">
+                			<field name="product_id" on_change="onchange_product_id(invoice_id,product_id)"/>                			
+                			<field name="invoice_id" on_change="onchange_invoice_id(invoice_id,product_id)"/>
+                			<field name="qty_on_hand"/>	                			               		
+                			<field name="qty"/>
+                			<field name="price"/>
+                		</group>               
+                		<separtor/> 			                		
+                		<group string="Product to Adjust">                		
+                			<field name="product_id_adj" on_change="onchange_product_id_adj(product_id_adj)"/> 
+                			<field name="qty_on_hand_adj"/>               			
+                			<field name="qty_adj"/>
+                			<field name="price_adj"/>
+                		</group>	                	
+                	</sheet>
+                </form>
+            </field>
+        </record>
+        
+        <record id="view_stock_adjustment_tree" model="ir.ui.view">
+		 <field name="name">stock.adjustment.tree</field>
+		 <field name="model">stock.adjustment</field>		 
+		 <field name="arch" type="xml">
+		 	<tree string="Stock Adjustment">			 	
+		 		<field name="invoice_id"/>
+		 		<field name="product_id"/>
+		 		<field name="qty"/>
+		 		<field name="price"/>
+		 		<field name="product_id_adj"/>
+		 		<field name="qty_adj"/>
+		 		<field name="price_adj"/>
+		 		<field name="state"/>		 					 	   	 
+			</tree>
+		 </field>
+		</record>
+		
+		<menuitem id="menu_stock_adjustment" name="Stock Adjustment" parent="stock.menu_stock_root" sequence="4"/>
+		
+		<record id="action_stock_adjustment" model="ir.actions.act_window">
+            <field name="name">Stock Adjustment</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="res_model">stock.adjustment</field>
+            <field name="view_type">form</field>
+            <field name="view_mode">tree,form</field>
+            <field name="view_id" ref="view_stock_adjustment_tree"/>                        
+        </record>
+        <menuitem action="action_stock_adjustment" id="menu_action_stock_adjustment" parent="menu_stock_adjustment" sequence="30"/>                
 	</data>
 </openerp>

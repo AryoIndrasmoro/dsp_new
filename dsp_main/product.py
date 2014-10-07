@@ -170,7 +170,8 @@ class product_template(osv.osv):
     _columns = {
             'name'              : fields.char('Name', size=128, required=True, translate=True, select=True, change_default=True),
             'vintages'          : fields.selection([(num, str(num)) for num in range(1970, (datetime.now().year) )], 'Vintages', store='True'),
-            'classification'    : fields.char('Classification', size=128),        
+            'classification'    : fields.char('Classification', size=128),
+            'ml'                : fields.char('ML', size=128),        
             'grape_id'          : fields.many2one('product.grape', 'Grape', required=False, ondelete='cascade', help="Product Grape."),   
             'country_id'        : fields.many2one('res.country', 'Country', required=False, ondelete='cascade', help="Product Country."),
             'region_id'         : fields.many2one('product.region', 'Region', required=False, ondelete='cascade', help="Product Region."),  
@@ -186,7 +187,9 @@ class product_template(osv.osv):
             'suggest_price'     : fields.function(_compute_suggest_price, string="Suggested Price", type='float', digits_compute=dp.get_precision('Product Price'), multi="_compute_amounts"),                            
             'real_price'        : fields.float('Product Real Price', digits_compute=dp.get_precision('Product Price')),
             'qty_reserved'      : fields.one2many('product.reserved.qty', 'product_id', 'Qty Reserved'),
-            'total_reserved'    : fields.function(_compute_reserved_qty, string="Reserved Qty", type='float', digits_compute=dp.get_precision('Product Unit of Measure')),                                    
+            'total_reserved'    : fields.function(_compute_reserved_qty, string="Reserved Qty", type='float', digits_compute=dp.get_precision('Product Unit of Measure')),
+            'qty_adjusted_in'   : fields.float('Adjusted Qty In', digits_compute=dp.get_precision('Product Unit of Measure')),
+            'qty_adjusted_out'  : fields.float('Adjusted Qty Out', digits_compute=dp.get_precision('Product Unit of Measure')),                                    
             #'real_price'    : fields.function(_compute_suggest_price, string="Real Price", type='float', digits_compute=dp.get_precision('Account'), multi="_compute_amounts"),
                 }
     
