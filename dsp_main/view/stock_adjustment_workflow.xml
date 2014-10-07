@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<openerp>
+    <data>
+
+        <record id="stock_adjustment" model="workflow">
+            <field name="name">Stock Adjustment Basic Workflow</field>
+            <field name="osv">stock.adjustment</field>
+            <field name="on_create">True</field>
+        </record>
+
+        <record id="act_draft" model="workflow.activity">
+            <field name="wkf_id" ref="stock_adjustment"/>
+            <field name="flow_start">True</field>
+            <field name="name">draft</field>            
+        </record>
+        
+        <record id="act_confirmed" model="workflow.activity">
+            <field name="wkf_id" ref="stock_adjustment"/>
+            <field name="name">confirmed</field>
+            <field name="kind">function</field>            
+            <field name="action">stock_adjustment_confirmed()</field>            
+        </record>
+                
+        <record id="act_cancel" model="workflow.activity">
+            <field name="wkf_id" ref="stock_adjustment"/>
+            <field name="name">cancel</field>
+            <field name="kind">function</field>            
+            <field name="action">stock_adjustment_cancel()</field>
+            <field name="flow_stop">True</field>
+        </record>        
+        
+        <record id="act_done" model="workflow.activity">
+            <field name="wkf_id" ref="stock_adjustment"/>
+            <field name="name">done</field>
+            <field name="action">stock_adjustment_done()</field>
+            <field name="kind">function</field>
+            <field name="flow_stop">True</field>            
+        </record>                 		   		
+		
+		<record model="workflow.transition" id="trans_draft_confirmed">
+		    <field name="act_from" ref="act_draft" />
+		    <field name="act_to" ref="act_confirmed" />
+		    <field name="signal">stock_adjustmend_confirm</field>
+		</record>
+    </data>
+</openerp>
