@@ -33,6 +33,11 @@
 							</group>
 						</group>
 					</page>
+					<page string="Supplier Info">
+						<group>							
+							<field name="supplier_dsp" />																			
+						</group>
+					</page>
 				</page>				
 				<xpath expr="/form/sheet/notebook/page[@string='Sales']" position="after">
 	                <page string="Price List" groups="base.group_erp_manager">
@@ -71,9 +76,15 @@
 	                		</field>
 	                	</group>               
 	                </page>
+	            </xpath>	 	
+	            <xpath expr="/form/sheet/notebook/page/field[@name='seller_ids']" position="replace">	            	
+	                <field name="seller_ids" invisible="1"/>
 	            </xpath>	 	            		            
+	            <xpath expr="/form/sheet/notebook/page/separator[@string='Suppliers']" position="replace">	            	
+	                <separator string="Suppliers" invisible="1"/>
+	            </xpath>
 			</field>			
-		</record>		
+		</record>					
 	    
 	    <record model="ir.ui.view" id="product.product_kanban_view_inherit">
 	        <field name="name">Product Kanban Inherit</field>
