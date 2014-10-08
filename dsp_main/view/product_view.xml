@@ -77,12 +77,12 @@
 	                	</group>               
 	                </page>
 	            </xpath>	 	
-	            <xpath expr="/form/sheet/notebook/page/field[@name='seller_ids']" position="replace">	            	
+	            <!--<xpath expr="/form/sheet/notebook/page/field[@name='seller_ids']" position="replace">	            	
 	                <field name="seller_ids" invisible="1"/>
 	            </xpath>	 	            		            
 	            <xpath expr="/form/sheet/notebook/page/separator[@string='Suppliers']" position="replace">	            	
 	                <separator string="Suppliers" invisible="1"/>
-	            </xpath>
+	            </xpath>-->
 			</field>			
 		</record>					
 	    
