@@ -314,6 +314,26 @@
             <field name="view_mode">tree,form</field>
             <field name="view_id" ref="view_stock_adjustment_tree"/>                        
         </record>
-        <menuitem action="action_stock_adjustment" id="menu_action_stock_adjustment" parent="menu_stock_adjustment" sequence="30"/>                
+        <menuitem action="action_stock_adjustment" id="menu_action_stock_adjustment" parent="menu_stock_adjustment" sequence="30"/>
+        
+        <record id="view_stock_tree_dsp" model="ir.ui.view">
+	        <field name="name">report.stock.move.tree.dsp</field>
+	        <field name="model">report.stock.move</field>
+	        <field name="inherit_id" ref="stock.view_stock_tree"/>
+	        <field name="arch" type="xml">	            	              
+                <field name="value" position="replace">
+                	<field name="value" sum="Total value" invisible="1"/>                	
+                </field>	                	           
+                <field name="day_diff" position="replace">
+                	<field name="day_diff" invisible="1"/>                	
+                </field>
+                <field name="day_diff1" position="replace">
+                	<field name="day_diff1" invisible="1"/>                	
+                </field>
+                <field name="day_diff2" position="replace">
+                	<field name="day_diff2" invisible="1"/>                	
+                </field>
+	        </field>
+	    </record>                
 	</data>
 </openerp>
