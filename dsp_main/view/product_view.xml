@@ -108,8 +108,9 @@
                     </div>
                 </div>       	                	
                 <field name="name" position="after">
-	            	<t t-if="record.vintages.raw_value"> - <field name="vintages"/></t> 
-	            </field>	                            	            
+	            	<t t-if="record.vintages.raw_value"> - <field name="vintages"/></t>
+	            	<t t-if="record.volume_l.raw_value"> - <field name="volume_l"/></t> 	            	
+	            </field>	                            	            	            
 				<ul position="inside">                    
                     <li t-if="record.type.raw_value != 'service'">Grape: <field name="grape_id"/></li>
                     <li t-if="record.type.raw_value != 'service'">Brand: <field name="brand"/></li>                    
@@ -123,8 +124,7 @@
             <field name="inherit_id" ref="product.product_product_tree_view"/>
             <field name="arch" type="xml">            	
                 <field name="name" position="replace">
-                	<field name="grape_id"/>
-                	<field name="brand"/>             
+                	<field name="grape_id"/>                	            
                 	<field name="name"/>   	
                 	<field name="vintages"/>                	
                 	<field name="country_id"/>
@@ -132,8 +132,7 @@
                 	<field name="type_id"/>
                 	<field name="volume_l"/>
                 	<field name="volume_alcohol"/>
-                	<field name="appelation_id"/>
-                	<field name="brand"/>
+                	<field name="appelation_id"/>                	
                 	<field name="classification"/>                	   	          
                 </field>         
                 <field name="standard_price" position="replace">
@@ -282,12 +281,12 @@
                 <xpath expr="//group[@string='Stock and Expected Variations']" position="inside">                    
                    	<field name="total_reserved" class="oe_inline"/>                   	                       
                 </xpath>                
-                <xpath expr="//group[@string='Stock and Expected Variations']" position="after">
+                <!--<xpath expr="//group[@string='Stock and Expected Variations']" position="after">
                 	<group string="Stock Adjustment">                    
 	                   	<field name="qty_adjusted_in" readonly="1"/>
 	                   	<field name="qty_adjusted_out" readonly="1"/>                   	                       
 	                </group>
-                </xpath>
+                </xpath>-->
             </field>
         </record>
         

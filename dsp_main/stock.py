@@ -1,6 +1,7 @@
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
 import time
+import pytz
 from operator import itemgetter
 from itertools import groupby
 
@@ -11,6 +12,8 @@ from openerp import tools
 from openerp.tools import float_compare, DEFAULT_SERVER_DATETIME_FORMAT
 import openerp.addons.decimal_precision as dp
 import logging
+from openerp import SUPERUSER_ID
+from openerp.tools import DEFAULT_SERVER_DATE_FORMAT, DEFAULT_SERVER_DATETIME_FORMAT, DATETIME_FORMATS_MAP
 
 
 class stock_picking(osv.osv):
@@ -221,9 +224,9 @@ class stock_picking(osv.osv):
                                     
                                     print "total qty ", total_qty
                                     # print "total_qty>>>>>>>>>>>>>>>>>>", total_qty, total_credit, total_credit * (qty/total_qty)
-                                    cost_component_each_item = total_credit / (total_qty or 0.0)                                
-                                    new_std_price = ((amount_unit * product_avail[product.id])\
-                                        + (new_price * qty) + cost_component_each_item) / (product_avail[product.id] + qty)
+                                    cost_component_each_item = (total_credit or 0.0) / total_qty                                
+                                    new_std_price = (((amount_unit * product_avail[product.id])
+                                        + (new_price * qty)) / (product_avail[product.id] + qty)) + cost_component_each_item
                                     
                                     print "cost component ", cost_component_each_item
                                     print "amount_unit", amount_unit
@@ -255,6 +258,7 @@ class stock_picking(osv.osv):
                     
                     # Internal Update Cost Price
                     elif (pick.type == 'internal') and (move.product_id.cost_method == 'average') and (pick.internal_move_type == 'overseas'):                                                       
+                        print "masuk internal"
                         product = product_obj.browse(cr, uid, move.product_id.id)
                         #move_currency_id = move.company_id.currency_id.id
                         #context['currency_id'] = move_currency_id
@@ -264,7 +268,7 @@ class stock_picking(osv.osv):
                         product = product_obj.browse(cr, uid, move.product_id.id)
                         amount_unit = product.price_get('standard_price', context=context)[product.id]
                         product_avail[product.id] = product.qty_available                        
-                        print product.foc
+                        print "pritn foc prod", product.foc
                         if product.foc == 'FOC':
                             qty = 0                                                                        
                         
@@ -309,7 +313,7 @@ class stock_picking(osv.osv):
                             product_obj.write(cr, uid, [product.id], {
                                                                       'jkt_cost'        : result_jkt_cost,                                                                                                                                
                                                                       'real_price'      : real_price,
-                                                                      'standard_price'  : real_price,                                                              
+                                                                      'standard_price'  : result_jkt_cost,                                                              
                                                                       })
 
             for move in too_few:
@@ -560,7 +564,61 @@ class stock_move(osv.osv):
         if loc_dest_id:
             result['location_dest_id'] = loc_dest_id
         return {'value': result}            
+    
+    def action_done(self, cr, uid, ids, context=None):
+        """ Makes the move done and if all moves are done, it will finish the picking.
+        @return:
+        """        
+        picking_ids = []
+        move_ids = []
+        wf_service = netsvc.LocalService("workflow")
+        if context is None:
+            context = {}
 
+        todo = []
+        for move in self.browse(cr, uid, ids, context=context):
+            if move.state=="draft":
+                todo.append(move.id)
+        if todo:
+            self.action_confirm(cr, uid, todo, context=context)
+            todo = []
+
+        for move in self.browse(cr, uid, ids, context=context):
+            if move.state in ['done','cancel']:
+                continue
+            move_ids.append(move.id)
+
+            if move.picking_id:
+                picking_ids.append(move.picking_id.id)
+            if move.move_dest_id.id and (move.state != 'done'):
+                # Downstream move should only be triggered if this move is the last pending upstream move
+                other_upstream_move_ids = self.search(cr, uid, [('id','!=',move.id),('state','not in',['done','cancel']),
+                                            ('move_dest_id','=',move.move_dest_id.id)], context=context)
+                if not other_upstream_move_ids:
+                    self.write(cr, uid, [move.id], {'move_history_ids': [(4, move.move_dest_id.id)]})
+                    if move.move_dest_id.state in ('waiting', 'confirmed'):
+                        self.force_assign(cr, uid, [move.move_dest_id.id], context=context)
+                        if move.move_dest_id.picking_id:
+                            wf_service.trg_write(uid, 'stock.picking', move.move_dest_id.picking_id.id, cr)
+                        if move.move_dest_id.auto_validate:
+                            self.action_done(cr, uid, [move.move_dest_id.id], context=context)
+
+            #self._create_product_valuation_moves(cr, uid, move, context=context)
+            if move.state not in ('confirmed','done','assigned'):
+                todo.append(move.id)
+
+        if todo:
+            self.action_confirm(cr, uid, todo, context=context)
+
+        self.write(cr, uid, move_ids, {'state': 'done', 'date': time.strftime(DEFAULT_SERVER_DATETIME_FORMAT)}, context=context)
+        for id in move_ids:
+             wf_service.trg_trigger(uid, 'stock.move', id, cr)
+
+        for pick_id in picking_ids:
+            wf_service.trg_write(uid, 'stock.picking', pick_id, cr)
+
+        return True
+    
 stock_move()    
 
 class product_product(osv.osv):
@@ -728,7 +786,7 @@ class product_product(osv.osv):
                 c.update({ 'states': ('confirmed','waiting','assigned'), 'what': ('out',) })
             stock = self.get_product_available(cr, uid, ids, context=c)            
             for id in ids:
-                if f == 'qty_available':
+                if (f == 'qty_available' or f == 'virtual_available'):
                     prod_obj = self.browse(cr, uid, id, context=context)
                     qty_on_hand = stock.get(id, 0.0) - prod_obj.qty_adjusted_out + prod_obj.qty_adjusted_in                    
                     res[id][f] = qty_on_hand                    
@@ -752,34 +810,107 @@ class product_product(osv.osv):
                     "or any of its children.\n"
                     "Otherwise, this includes goods stored in any Stock Location "
                     "with 'internal' type."),
+                'virtual_available': fields.function(_product_available, multi='qty_available',
+                    type='float',  digits_compute=dp.get_precision('Product Unit of Measure'),
+                    string='Forecasted Quantity',
+                    help="Forecast quantity (computed as Quantity On Hand "
+                         "- Outgoing + Incoming)\n"
+                         "In a context with a single Stock Location, this includes "
+                         "goods stored in this location, or any of its children.\n"
+                         "In a context with a single Warehouse, this includes "
+                         "goods stored in the Stock Location of this Warehouse, or any "
+                         "of its children.\n"
+                         "In a context with a single Shop, this includes goods "
+                         "stored in the Stock Location of the Warehouse of this Shop, "
+                         "or any of its children.\n"
+                         "Otherwise, this includes goods stored in any Stock Location "
+                         "with 'internal' type."),
                 }
     
     
 product_product()
 
 class stock_adjustment(osv.osv):
-    _name = 'stock.adjustment'    
+    _name = 'stock.adjustment'   
+    
+    def _default_location_source(self, cr, uid, context=None):
+        """ Gets default address of partner for source location
+        @return: Address id or False
+        """
+        mod_obj = self.pool.get('ir.model.data')
+        picking_type = context.get('picking_type')
+        location_id = False
+
+        if context is None:
+            context = {}
+        if context.get('move_line', []):
+            try:
+                location_id = context['move_line'][0][2]['location_id']
+            except:
+                pass
+        elif context.get('address_in_id', False):
+            part_obj_add = self.pool.get('res.partner').browse(cr, uid, context['address_in_id'], context=context)
+            if part_obj_add:
+                location_id = part_obj_add.property_stock_supplier.id
+        else:
+            location_xml_id = False
+            if picking_type == 'in':
+                location_xml_id = 'stock_location_suppliers'
+            elif picking_type in ('out', 'internal'):
+                location_xml_id = 'stock_location_stock'
+            if location_xml_id:
+                try:
+                    location_model, location_id = mod_obj.get_object_reference(cr, uid, 'stock', location_xml_id)
+                    with tools.mute_logger('openerp.osv.orm'):
+                        self.pool.get('stock.location').check_access_rule(cr, uid, [location_id], 'read', context=context)
+                except (orm.except_orm, ValueError):
+                    location_id = False
+
+        return location_id
+     
     _columns = {
-            'product_id'        : fields.many2one('product.product', 'Product', required=True),                    
-            'invoice_id'        : fields.many2one('account.invoice', 'Invoice Ref', required=True, domain=[('type','=','out_invoice')]),
-            'qty_on_hand'       : fields.float('Qty On Hand' , digits_compute= dp.get_precision('Product Unit Of Measure')),
-            'qty'               : fields.float('Qty to Return', digits_compute= dp.get_precision('Product Unit Of Measure')),
-            'price'             : fields.float('Price', digits_compute= dp.get_precision('Product Price')),
-            'product_id_adj'    : fields.many2one('product.product', 'Product to Adjust'),
-            'qty_on_hand_adj'   : fields.float('Qty On Hand', digits_compute= dp.get_precision('Product Unit Of Measure')),                                
-            'qty_adj'           : fields.float('Qty to Adjust', digits_compute= dp.get_precision('Product Unit Of Measure')),
-            'price_adj'         : fields.float('Price to Adjust', digits_compute= dp.get_precision('Product Price')),
-            'state'             : fields.selection(
-                                    [('draft', 'Draft'),
-                                     ('confirmed', 'Confirmed'),
-                                     ('done', 'Done'),
-                                     ('cancel', 'Cancel')], 
-                                    'Status', readonly=True),
-                }      
+            'product_id'            : fields.many2one('product.product', 'Product', required=True),
+            'date'                  : fields.date('Adjusted Date'),
+            'account_id'            : fields.many2one('account.account', 'Account', required=True),                    
+            'journal_id'            : fields.many2one('account.journal', 'Journal', required=True),
+            'invoice_id'            : fields.many2one('account.invoice', 'Invoice Ref', required=True, domain=[('type','=','out_invoice')]),
+            'qty_on_hand'           : fields.float('Qty On Hand' , digits_compute= dp.get_precision('Product Unit Of Measure')),            
+            'price'                 : fields.float('Cost Price', digits_compute= dp.get_precision('Product Price')),
+            'product_id_adj'        : fields.many2one('product.product', 'Product to Adjust'),
+            'qty_on_hand_adj'       : fields.float('Qty On Hand', digits_compute= dp.get_precision('Product Unit Of Measure')),                                
+            'qty_adj'               : fields.float('Qty to Adjust', digits_compute= dp.get_precision('Product Unit Of Measure')),
+            'price_adj'             : fields.float('Price to Adjust', digits_compute= dp.get_precision('Product Price')),
+            'location_id'           : fields.many2one('stock.location', 'Source Location', required=True),
+            'location_dest_id'      : fields.many2one('stock.location', 'Destination Location', required=True),
+            'location_id_adj'       : fields.many2one('stock.location', 'Source Location', required=True),
+            'location_dest_id_adj'  : fields.many2one('stock.location', 'Destination Location', required=True),
+            'state'                 : fields.selection([('draft', 'Draft'),('done', 'Done'),('cancel', 'Cancel')], 'Status', readonly=True),
+            'qty'                   : fields.float('Qty to Return', digits_compute= dp.get_precision('Product Unit Of Measure')),
+            'person_name'           : fields.char('Person Name', size=128, required=True),
+            'date_confirmed'        : fields.date('Input Date', required=True),
+            'file_confirmed'        : fields.binary('Quotation File', required=True),
+        }      
     
     _defaults = {
-                 'state' : 'draft'
+                 'state' : 'draft',
+                 'account_id' : 421,
+                 'journal_id' : 1,
+                 'date': lambda *a: time.strftime('%Y-%m-%d %H:%M:%S'),
+                 'location_id' : 5, #inventory loss
+                 'location_dest_id' : 12,
+                 'location_id_adj' : 12,
+                 'location_dest_id_adj' : 9 #customers
                  }  
+    
+    def onchange_account_id(self, cr, uid, ids, account_id, context=None):
+        if account_id:
+            print account_id                                                                                                                                                    
+        return True
+    
+    def onchange_journal_id(self, cr, uid, ids, journal_id, context=None):
+        if journal_id:
+            print journal_id                                                                                                                                                    
+        return True
     
     def onchange_invoice_id(self, cr, uid, ids, invoice_id, product_id, context=None):        
         if not product_id:
@@ -794,13 +925,14 @@ class stock_adjustment(osv.osv):
                 
         if invoice_line_obj:        
             qty = invoice_line_obj[0].quantity
-            price = invoice_line_obj[0].price_unit        
+            price = invoice_line_obj[0].jkt_cost        
         else:
             qty = 0.0
             price = 0.0        
         
         val = {
                'qty' : qty,
+               'qty_adj' : qty,
                'price' : price
                }
                                                                                                                                       
@@ -823,7 +955,7 @@ class stock_adjustment(osv.osv):
             
             if invoice_line_obj:        
                 qty = invoice_line_obj[0].quantity
-                price = invoice_line_obj[0].price_unit        
+                price = invoice_line_obj[0].jkt_cost    
             else:
                 qty = 0.0
                 price = 0.0
@@ -839,54 +971,322 @@ class stock_adjustment(osv.osv):
     
     def onchange_product_id_adj(self, cr, uid, ids, product_id, context=None):
         qty_avail = 0.0
-        real_price = 0.0
+        jkt_cost = 0.0
                                         
         if product_id:
             product_obj = self.pool.get('product.product').browse(cr, uid, product_id)
             qty_avail = product_obj.qty_available
-            real_price = product_obj.real_price
+            jkt_cost = product_obj.jkt_cost
         else:
             qty_avail = 0
             
         val = {               
                'qty_on_hand_adj' : qty_avail,
-               'price_adj' : real_price
+               'price_adj' : jkt_cost
                }
                                                                                                                                       
         return {'value' : val}
     
-    def adjust_stock(self, cr, uid, ids, context=None):
-        product_obj = self.pool.get('product.product')        
-        for stock_adj in self.browse(cr, uid, ids, context=context):
-            qty = stock_adj.qty
-            qty_adj = stock_adj.qty_adj
-            qty_on_hand = stock_adj.qty_on_hand
-            qty_on_hand_adj = stock_adj.qty_on_hand_adj
-            product_id = stock_adj.product_id
-            product_id_adj = stock_adj.product_id_adj
-            
-            products = self.pool.get('product.product').browse(cr, uid, product_id.id)
-            qty_adjusted_out = products.qty_adjusted_out + qty
-            qty_adjusted_in = products.qty_adjusted_in + qty_adj                    
-            
-            product_obj.write(cr, uid, [product_id.id], {
-                                                         'qty_adjusted_out'  : qty_adjusted_out,
-                                                         'qty_adjusted_in'  : qty_adjusted_in 
-                                                         })
-            
-        return True
+    def date_to_datetime(self, cr, uid, userdate, context=None):
+        """ Convert date values expressed in user's timezone to
+        server-side UTC timestamp, assuming a default arbitrary
+        time of 12:00 AM - because a time is needed.
     
-    def stock_adjustment_confirm(self, cr, uid, ids):
-        print "masuk"
-        self.write(cr, uid, ids, {'state':'confirmed'})
-        return True
+        :param str userdate: date string in in user time zone
+        :return: UTC datetime string for server-side use
+        """
+        # TODO: move to fields.datetime in server after 7.0
+        user_date = datetime.strptime(userdate, DEFAULT_SERVER_DATE_FORMAT)
+        if context and context.get('tz'):
+            tz_name = context['tz']
+        else:
+            tz_name = self.pool.get('res.users').read(cr, SUPERUSER_ID, uid, ['tz'])['tz']
+        if tz_name:
+            utc = pytz.timezone('UTC')
+            context_tz = pytz.timezone(tz_name)
+            user_datetime = user_date + relativedelta(hours=12.0)
+            local_timestamp = context_tz.localize(user_datetime, is_dst=False)
+            user_datetime = local_timestamp.astimezone(utc)
+            return user_datetime.strftime(DEFAULT_SERVER_DATETIME_FORMAT)
+        return user_date.strftime(DEFAULT_SERVER_DATETIME_FORMAT)
+
+
+    def _prepare_order_line_move(self, cr, uid, stock_adj, context=None):
+        invoice_line_id = self.pool.get('account.invoice.line').search(cr, uid, [('invoice_id','=',stock_adj.invoice_id.id),('product_id','=',stock_adj.product_id.id)], context=context)        
+        invoice_line_obj = self.pool.get('account.invoice.line').browse(cr, uid, invoice_line_id)                                     
+        if invoice_line_obj:        
+            qty = invoice_line_obj[0].quantity
+            price = invoice_line_obj[0].jkt_cost    
+        else:
+            qty = 0.0
+            price = 0.0            
+            
+        return {
+            'name': 'Stock Adjustment',
+            'product_id': stock_adj.product_id.id,
+            'product_qty': qty,
+            'product_uom': stock_adj.product_id.uom_id.id,            
+            'date': self.date_to_datetime(cr, uid, stock_adj.date, context),
+            'date_expected': self.date_to_datetime(cr, uid, stock_adj.date, context),
+            'location_id': stock_adj.location_id.id,
+            'location_dest_id': stock_adj.location_dest_id.id,                                            
+            'state': 'draft',
+            'type':'in',            
+            'price_unit': price
+        }
+        
+    def _prepare_order_line_move_adj(self, cr, uid, stock_adj, context=None):
+        invoice_line_id = self.pool.get('account.invoice.line').search(cr, uid, [('invoice_id','=',stock_adj.invoice_id.id),('product_id','=',stock_adj.product_id.id)], context=context)
+        invoice_line_obj = self.pool.get('account.invoice.line').browse(cr, uid, invoice_line_id)                                     
+        if invoice_line_obj:        
+            qty_adj = invoice_line_obj[0].quantity            
+        else:
+            qty_adj = 0.0
+                                
+        product_obj_adj = self.pool.get('product.product').browse(cr, uid, stock_adj.product_id_adj.id)                                     
+        if product_obj_adj:                        
+            price_adj = product_obj_adj.jkt_cost    
+        else:                
+            price_adj = 0.0                    
+            
+        return {
+            'name': 'Stock Adjustment',
+            'product_id': stock_adj.product_id_adj.id,
+            'product_qty': qty_adj,
+            'product_uom': stock_adj.product_id_adj.uom_id.id,            
+            'date': self.date_to_datetime(cr, uid, stock_adj.date, context),
+            'date_expected': self.date_to_datetime(cr, uid, stock_adj.date, context),
+            'location_id': stock_adj.location_id_adj.id,
+            'location_dest_id': stock_adj.location_dest_id_adj.id,                                            
+            'state': 'draft',
+            'type':'out',            
+            'price_unit': price_adj
+        }
+        
+    def stock_adjustment_confirm(self, cr, uid, ids, context=None):
+        todo_moves = []
+        stock_move = self.pool.get('stock.move')                
+        for stock_adj in self.browse(cr, uid, ids, context=context):
+            product_obj = self.pool.get('product.product').browse(cr, uid, stock_adj.product_id.id)
+            account_valuation = product_obj.categ_id.property_stock_valuation_account_id.id                               
+            account_output = product_obj.categ_id.property_stock_account_output_categ.id            
+            #===================================================================
+            # Create Stock moves Product To Return
+            #===================================================================
+            move = stock_move.create(cr, uid, self._prepare_order_line_move(cr, uid, stock_adj, context=context))                        
+            todo_moves.append(move)
+            stock_move.action_confirm(cr, uid, todo_moves)
+            stock_move.force_assign(cr, uid, todo_moves)
+            stock_move.action_done(cr, uid, todo_moves)
+            
+            #===================================================================
+            # Create stock moves Product to Adjust
+            #===================================================================
+            move = stock_move.create(cr, uid, self._prepare_order_line_move_adj(cr, uid, stock_adj, context=context))                        
+            todo_moves.append(move)
+            stock_move.action_confirm(cr, uid, todo_moves)
+            stock_move.force_assign(cr, uid, todo_moves)
+            stock_move.action_done(cr, uid, todo_moves)
+                        
+            invoice_line_id = self.pool.get('account.invoice.line').search(cr, uid, [('invoice_id','=',stock_adj.invoice_id.id),('product_id','=',stock_adj.product_id.id)], context=context)
+            invoice_line_obj = self.pool.get('account.invoice.line').browse(cr, uid, invoice_line_id)                                     
+            if invoice_line_obj:        
+                qty = invoice_line_obj[0].quantity
+                price = invoice_line_obj[0].jkt_cost    
+            else:
+                qty = 0.0
+                price = 0.0                
+                
+            product_obj_adj = self.pool.get('product.product').browse(cr, uid, stock_adj.product_id_adj.id)                                     
+            if product_obj_adj:                                    
+                price_adj = product_obj_adj.jkt_cost    
+            else:                
+                price_adj = 0.0
+            
+            qty_adj = qty            
+            
+            #===================================================================
+            # Posting Cost Of Goods Sold
+            #===================================================================
+            sequence_obj = self.pool.get('ir.sequence')
+            move_pool = self.pool.get('account.move')
+            move_line_pool = self.pool.get('account.move.line')
+                                     
+            seq = sequence_obj.get_id(cr, uid, stock_adj.journal_id.sequence_id.id)
+     
+            period_search = self.pool.get('account.period').search(cr, uid, [('date_start','<=',stock_adj.date),('date_stop','>=',stock_adj.date)])
+            period_browse = self.pool.get('account.period').browse(cr, uid, period_search)                
+            
+            #===================================================================
+            # Stock Journal Return
+            #===================================================================        
+            move = {
+                    'name'          : seq or '/',
+                    'journal_id'    : stock_adj.journal_id.id,                    
+                    'date'          : stock_adj.date,                    
+                    'period_id'     : period_browse[0].id,
+                    'partner_id'    : False
+                    }
+          
+            move_id = move_pool.create(cr, uid, move)            
+            
+            debit = (price * qty)
+            move_line = {
+                         'name'      : seq or '/',
+                         'debit'     : debit,
+                         'credit'    : 0.0,
+                         'account_id': account_valuation, #inventory asset 
+                         'move_id'   : move_id,
+                         'journal_id': 9, #stock journal
+                         'period_id' : period_browse[0].id,
+                         'partner_id': False,
+                         #'currency_id': 13,
+                         #'amount_currency': company_currency <> current_currency and -bts.amount or 0.0,
+                         'date'      : stock_adj.date,
+                    }
+            
+            move_line_pool.create(cr, uid, move_line)
+                  
+            #print "total_credit", total_credit
+            move_line = {
+                         'name'      : seq or '/',
+                         'debit'     : 0.0,
+                         'credit'    : debit,
+                         'account_id': account_output, #cost of goods sold
+                         'move_id'   : move_id,
+                         'journal_id': 9, #stock journal
+                         'period_id' : period_browse[0].id,
+                         'partner_id': False,
+                         #'currency_id': 13,
+                         #'amount_currency': company_currency <> current_currency and -bts.amount or 0.0,
+                         'date'      : stock_adj.date,
+                    }
+            move_line_pool.create(cr, uid, move_line)
+              
+            move_pool.post(cr, uid, [move_id], context={})
+            
+            #===================================================================
+            # Stock Journal Adjust
+            #===================================================================
+            move = {
+                    'name'          : seq or '/',
+                    'journal_id'    : stock_adj.journal_id.id,                    
+                    'date'          : stock_adj.date,                    
+                    'period_id'     : period_browse[0].id,
+                    'partner_id'    : False
+                    }
+          
+            move_id = move_pool.create(cr, uid, move)
+                                              
+            debit = (price * qty)
+            debit_adj = (price_adj * qty_adj)
+            
+            gain_loss = 0.0
+            if debit > debit_adj:
+                gain_loss = debit-debit_adj    
+                                        
+                move_line = {
+                             'name'      : seq or '/',
+                             'debit'     : debit,
+                             'credit'    : 0.0,
+                             'account_id': account_output,  
+                             'move_id'   : move_id,
+                             'journal_id': 9, #stock journal
+                             'period_id' : period_browse[0].id,
+                             'partner_id': False,
+                             #'currency_id': 13,
+                             #'amount_currency': company_currency <> current_currency and -bts.amount or 0.0,
+                             'date'      : stock_adj.date,
+                        }                
+                move_line_pool.create(cr, uid, move_line)                      
+                
+                move_line = {
+                             'name'      : seq or '/',
+                             'debit'     : 0.0,
+                             'credit'    : debit_adj,
+                             'account_id': account_valuation,
+                             'move_id'   : move_id,
+                             'journal_id': 9, #stock journal
+                             'period_id' : period_browse[0].id,
+                             'partner_id': False,
+                             #'currency_id': 13,
+                             #'amount_currency': company_currency <> current_currency and -bts.amount or 0.0,
+                             'date'      : stock_adj.date,
+                        }
+                move_line_pool.create(cr, uid, move_line)
+                
+                move_line = {
+                             'name'      : seq or '/',
+                             'debit'     : 0.0,
+                             'credit'    : gain_loss,
+                             'account_id': 461, #expense cost for products
+                             'move_id'   : move_id,
+                             'journal_id': 9, #expense journal
+                             'period_id' : period_browse[0].id,
+                             'partner_id': False,
+                             #'currency_id': 13,
+                             #'amount_currency': company_currency <> current_currency and -bts.amount or 0.0,
+                             'date'      : stock_adj.date,
+                        }
+                move_line_pool.create(cr, uid, move_line)
+                  
+                move_pool.post(cr, uid, [move_id], context={})
+            
+            elif debit < debit_adj:
+                gain_loss = debit_adj-debit    
+                                        
+                move_line = {
+                             'name'      : seq or '/',
+                             'debit'     : debit,
+                             'credit'    : 0.0,
+                             'account_id': account_output, 
+                             'move_id'   : move_id,
+                             'journal_id': 9, #stock journal
+                             'period_id' : period_browse[0].id,
+                             'partner_id': False,
+                             #'currency_id': 13,
+                             #'amount_currency': company_currency <> current_currency and -bts.amount or 0.0,
+                             'date'      : stock_adj.date,
+                        }                
+                move_line_pool.create(cr, uid, move_line)
+                
+                move_line = {
+                             'name'      : seq or '/',
+                             'debit'     : gain_loss,
+                             'credit'    : 0.0,
+                             'account_id': 461, #expense cost for products
+                             'move_id'   : move_id,
+                             'journal_id': 9, #expense journal
+                             'period_id' : period_browse[0].id,
+                             'partner_id': False,
+                             #'currency_id': 13,
+                             #'amount_currency': company_currency <> current_currency and -bts.amount or 0.0,
+                             'date'      : stock_adj.date,
+                        }
+                move_line_pool.create(cr, uid, move_line)                      
+                
+                move_line = {
+                             'name'      : seq or '/',
+                             'debit'     : 0.0,
+                             'credit'    : debit_adj,
+                             'account_id': account_valuation,
+                             'move_id'   : move_id,
+                             'journal_id': 9, #stock journal
+                             'period_id' : period_browse[0].id,
+                             'partner_id': False,
+                             #'currency_id': 13,
+                             #'amount_currency': company_currency <> current_currency and -bts.amount or 0.0,
+                             'date'      : stock_adj.date,
+                        }
+                move_line_pool.create(cr, uid, move_line)                                
+                  
+                move_pool.post(cr, uid, [move_id], context={})
+                            
+        self.write(cr, uid, ids, {'state':'done'})                            
+        return True                        
     
     def stock_adjustment_cancel(self, cr, uid, ids):
         self.write(cr, uid, ids, {'state':'cancel'})
-        return True
-    
-    def stock_adjustment_done(self, cr, uid, ids):
-        self.write(cr, uid, ids, {'state':'done'})
-        return True    
+        return True        
         
 stock_adjustment()

@@ -226,24 +226,43 @@
             <field name="arch" type="xml">
                 <form string="Stock Adjustment" version="7.0">
                 	<header>
-                		<button name="stock_adjustment_confirm" string="Confirm"/>
+                		<button name="stock_adjustment_confirm" string="Confirm" type="object"
+                			attrs="{'invisible':[('state', '!=', 'draft')]}"/>
+                		<button name="stock_adjustment_cancel" string="Cancel" type="object"
+                			attrs="{'invisible':[('state', '!=', 'draft')]}"/>
                 		<field name="state" widget="statusbar" statusbar_visible="draft,confirmed,done,cancel" statusbar_colors='{"confirmed":"blue"}' readonly="1"/>
                 	</header>                	
-                	<sheet string="Stock Adjustment">                		
-                		<group string="Product to Return">
-                			<field name="product_id" on_change="onchange_product_id(invoice_id,product_id)"/>                			
-                			<field name="invoice_id" on_change="onchange_invoice_id(invoice_id,product_id)"/>
-                			<field name="qty_on_hand"/>	                			               		
-                			<field name="qty"/>
-                			<field name="price"/>
-                		</group>               
-                		<separtor/> 			                		
-                		<group string="Product to Adjust">                		
-                			<field name="product_id_adj" on_change="onchange_product_id_adj(product_id_adj)"/> 
-                			<field name="qty_on_hand_adj"/>               			
-                			<field name="qty_adj"/>
-                			<field name="price_adj"/>
-                		</group>	                	
+                	<sheet string="Stock Adjustment">     
+                		<group>
+                			<group string="Information">	
+	                			<field name="date"/>                			
+	                			<field name="account_id" on_change="onchange_account_id(account_id)" invisible="1"/>
+	                			<field name="journal_id" on_change="onchange_journal_id(journal_id)" invisible="1"/>                			
+	                			<field name="date_confirmed"/>                			
+	                			<field name="person_name"/>
+	                			<field name="file_confirmed"/>
+	                		</group>                			
+                		</group>
+                		<separator/>                		                		           
+                		<group>
+	                		<group string="Product to Return">
+	                			<field name="product_id" on_change="onchange_product_id(invoice_id,product_id)"/>                			
+	                			<field name="invoice_id" on_change="onchange_invoice_id(invoice_id,product_id)"/>
+	                			<field name="qty_on_hand" invisible="1"/>	                			               		
+	                			<field name="qty" invisible="1"/>
+	                			<field name="price" invisible="1"/>
+	                			<field name="location_id"/>
+	                			<field name="location_dest_id"/>                			
+	                		</group>               	                			                	
+	                		<group string="Product to Adjust">                		
+	                			<field name="product_id_adj" on_change="onchange_product_id_adj(product_id_adj)"/> 
+	                			<field name="qty_on_hand_adj" invisible="1"/>               			
+	                			<field name="qty_adj" invisible="1"/>
+	                			<field name="price_adj" invisible="1"/>       
+	                			<field name="location_id_adj"/>
+	                			<field name="location_dest_id_adj"/>         			
+	                		</group>	   
+	                	</group>             	
                 	</sheet>
                 </form>
             </field>
@@ -266,6 +285,25 @@
 		 </field>
 		</record>
 		
+		<record id="stock_adjustment_search_form_view" model="ir.ui.view">
+            <field name="name">stock.adjustment.search.form</field>
+            <field name="model">stock.adjustment</field>            
+            <field name="arch" type="xml">
+            	<search string="Stock Adjustment">
+            		<group string="Filter">
+            			<field name="product_id" string="Product Name" filter_domain="[('product_id','ilike',self)]"/>
+            			<field name="invoice_id" string="Invoice No" filter_domain="[('invoice_id','ilike',self)]"/>            			            		
+            		</group>
+					<group string="Group By..">
+						<filter string='Product to Return' icon="terp-stock_symbol-selection" domain="[]" context="{'group_by' : 'product_id'}"/>						
+						<filter string='Invoice No' icon="terp-stock_symbol-selection" domain="[]" context="{'group_by' : 'invoice_id'}"/>						
+						<filter string='Product to Adjust' icon="terp-stock_symbol-selection" domain="[]" context="{'group_by' : 'product_id_adj'}"/>
+						<filter string='Status' icon="terp-stock_symbol-selection" domain="[]" context="{'group_by' : 'state'}"/>
+					</group>            		
+            	</search>            	
+            </field>            	
+        </record>            
+        
 		<menuitem id="menu_stock_adjustment" name="Stock Adjustment" parent="stock.menu_stock_root" sequence="4"/>
 		
 		<record id="action_stock_adjustment" model="ir.actions.act_window">

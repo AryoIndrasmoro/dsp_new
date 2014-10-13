@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 ##############################################################################
 #
 #    OpenERP, Open Source Management Solution
@@ -60,7 +59,7 @@ class product_product(osv.osv):
     
     _defaults = {        
         'cost_method'   : 'average',        
-        'valuation'     : 'manual_periodic',
+        'valuation'     : 'real_time',
         'type'          : 'product',        
     }
     
