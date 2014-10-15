@@ -627,8 +627,7 @@ class sale_order_line(osv.osv):
             if not account_id:
                 raise osv.except_osv(_('Error!'),
                             _('There is no Fiscal Position defined or Income category account defined for default properties of Product categories.'))
-                
-            print "zzzzzzzzzzzzzzzzzzzzzzzZZ", line.name, line.fee
+                        
             res = {
                 'name': line.name,
                 'sequence': line.sequence,
