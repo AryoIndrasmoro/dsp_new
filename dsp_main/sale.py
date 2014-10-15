@@ -546,13 +546,7 @@ class sale_order_line(osv.osv):
             price_unit = product.real_price          
             
             if product_product.foc == 'FOC':
-                price_unit = 0  
-            
-        pro_id=[]
-        cr.execute('select discount from outlet_discount where country_id = "base.fr"')
-        res = cr.fetchall()
-        for disc in res:
-            pro_id.append((disc))
+                price_unit = 0                      
             
         result = {'value': {
                     'product_id'    : product_dsp_id,
@@ -563,8 +557,7 @@ class sale_order_line(osv.osv):
                     'sub_profit'    : sub_profit,
                     'cons_doc'      : stock_default,     
                     'qty_on_hand'   : qty_on_hand,
-                    'qty_reserved'  : qty_reserved,
-                    'my_products'   : pro_id                                               
+                    'qty_reserved'  : qty_reserved,                                                                
                     }
                 } 
         return result 
