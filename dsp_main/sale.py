@@ -212,15 +212,50 @@ class sale_order(osv.osv):
         #     print "out"
         #=======================================================================
                                                                                                                                                                 
-        ###############################################
-        
+        ###############################################                        
+        for n in range(len(vals.get('order_line'))):            
+            order_line_id = vals.get('order_line')            
+            prod_id = order_line_id[n][2]['product_id']                  
+            partner_id = vals.get('partner_id')            
+            
+            partner_obj = self.pool.get('res.partner').browse(cr, uid, partner_id, context=context)
+            products = self.pool.get('product.product').browse(cr, uid, prod_id, context=None)
+            country = products.country_id.name                                                        
+            outlet_disc_id = self.pool.get('outlet.discount').search(cr, uid, [('outlet_id','=', partner_id),('country_id', '=', country)], context=None)
+            if outlet_disc_id:
+                outlet_disc_obj = self.pool.get('outlet.discount').browse(cr, uid, outlet_disc_id, context=None)            
+                discount = outlet_disc_obj[0].discount - partner_obj.consignment_discount
+                print "ssssssssssssssssssssss", discount                    
+                         
+            if bool(vals['order_line'][n][2]):
+                vals['order_line'][n][2]['discount']= discount  
+                        
         for n in range(len(vals.get('order_line'))):
-            fee = vals['order_line'][n][2]['fee']                    
+            fee = vals['order_line'][n][2]['fee']                                
 
         if vals.get('name','/')=='/':
             vals['name'] = self.pool.get('ir.sequence').get(cr, uid, 'sale.order') or '/'
         return super(sale_order, self).create(cr, uid, vals, context=context)
     
+    def write(self, cr, uid, ids, vals, context=None):
+        print "ssssssssssssssssssssss"
+        for sale in self.browse(cr, uid, ids, context=context):
+            for sale in self.browse(cr, uid, ids, context=context):        
+                for n in range(len(vals.get('order_line'))):            
+                    products = self.pool.get('product.product').browse(cr, uid, sale.order_line[n].product_id, context=None)
+                    country = products.country_id.name                                                        
+                    outlet_disc_id = self.pool.get('outlet.discount').search(cr, uid, [('outlet_id','=',sale.partner_id.id),('country_id', '=', country)], context=None)
+                    if outlet_disc_id:
+                        outlet_disc_obj = self.pool.get('outlet.discount').browse(cr, uid, outlet_disc_id, context=None)            
+                        discount = outlet_disc_obj[0].discount - sale.partner_id.consignment_discount
+                        print "ssssssssssssssssssssss", discount                    
+                                
+                    if bool(vals['order_line'][n][2]):
+                        vals['order_line'][n][2]['discount']= discount            
+             
+        return super(sale_order, self).write(cr, uid, ids, vals, context=context)
+    
+     
 #===============================================================================
 #     def create(self, cr, uid, vals, context=None):
 #         
@@ -358,6 +393,7 @@ class sale_order_line(osv.osv):
             'price_subtotal'    : fields.function(_amount_line, string='Subtotal', digits_compute= dp.get_precision('Account')),
             'qty_on_hand'       : fields.float('Qty On Hand', digits_compute=dp.get_precision('Product Unit of Measure')),
             'qty_reserved'      : fields.float('Qty Reserved', digits_compute=dp.get_precision('Product Unit of Measure')),
+            'discount'          : fields.float('Discount (%)', digits_compute= dp.get_precision('Discount')),
                 }
     
     def product_id_change(self, cr, uid, ids, pricelist, product, qty=0,
@@ -485,6 +521,15 @@ class sale_order_line(osv.osv):
         qty_on_hand = product_product.qty_available
         qty_reserved = product_product.total_reserved
         
+        products = self.pool.get('product.product').browse(cr, uid, product_dsp_id, context=None)
+        country = products.country_id.name
+        print country              
+                                
+        outlet_disc_id = self.pool.get('outlet.discount').search(cr, uid, [('outlet_id','=',partner_id.id),('country_id', '=', country)], context=None)
+        if outlet_disc_id:
+            outlet_disc_obj = self.pool.get('outlet.discount').browse(cr, uid, outlet_disc_id, context=None)            
+            discount = outlet_disc_obj[0].discount - partner_id.consignment_discount
+                
         if sale_type == 'Consignment':            
             stock_search  = self.pool.get('stock.picking').search(cr, uid, [('type','=','internal'),('partner_id', '=', partner_id.id)], context=None)
                     
@@ -506,16 +551,7 @@ class sale_order_line(osv.osv):
                     raise osv.except_osv(_('Warning Confirmation !'), _('This Internal moves has no line contains the product!"'))
                     price_unit = 0                                                                            
         
-        else:                                                         
-            products = self.pool.get('product.product').browse(cr, uid, product_dsp_id, context=None)
-            country = products.country_id.name
-            print country              
-                                    
-            outlet_disc_id = self.pool.get('outlet.discount').search(cr, uid, [('outlet_id','=',partner_id.id),('country_id', '=', country)], context=None)
-            if outlet_disc_id:
-                outlet_disc_obj = self.pool.get('outlet.discount').browse(cr, uid, outlet_disc_id, context=None)            
-                discount = outlet_disc_obj[0].discount - partner_id.consignment_discount            
-            
+        else:                                                                                         
             if sale_type == 'FOC':
                 discount = 100
             
