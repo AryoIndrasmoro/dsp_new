@@ -888,7 +888,7 @@ class stock_adjustment(osv.osv):
             'qty'                   : fields.float('Qty to Return', digits_compute= dp.get_precision('Product Unit Of Measure')),
             'person_name'           : fields.char('Person Name', size=128, required=True),
             'date_confirmed'        : fields.date('Input Date', required=True),
-            'file_confirmed'        : fields.binary('Quotation File', required=True),
+            'file_confirmed'        : fields.binary('Confirmation File', required=True),
         }      
     
     _defaults = {
