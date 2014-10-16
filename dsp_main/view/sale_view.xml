@@ -31,16 +31,16 @@
 				<page string="Other Information" groups="base.group_user" position="after">
 			  		<page string="Quotation Confirmation">
 			  			<group>
-			  				<field name="date_confirmed" attrs="{'required':[('state','=','quotation_confirm')]}" />
-							<field name="person_name" attrs="{'required':[('state','=','quotation_confirm')]}" />
-							<field name="file_confirmed" attrs="{'required':[('state','=','quotation_confirm')]}" />
+			  				<field name="date_confirmed" />
+							<field name="person_name" />
+							<field name="file_confirmed" />
 		 	  			</group>
 			  		</page>
 			  		<page string="Order Confirmation">
 			  			<group>
-			  				<field name="date_confirmed_order" attrs="{'required':[('state','=','progress')]}" />
-							<field name="person_name_order" attrs="{'required':[('state','=','progress')]}" />
-							<field name="file_confirmed_order" attrs="{'required':[('state','=','progress')]}" />
+			  				<field name="date_confirmed_order" />
+							<field name="person_name_order" />
+							<field name="file_confirmed_order" />
 		 	  			</group>
 			  		</page>
 				</page>
