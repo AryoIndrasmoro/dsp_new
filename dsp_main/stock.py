@@ -25,7 +25,7 @@ class stock_picking(osv.osv):
             'additional_cost'       : fields.selection([('no','Non Cost Component'), ('yes','With Cost Component')], 'Cost Component', readonly=False),
             'person_name'           : fields.char('Person Name', size=128),
             'date_confirmed'        : fields.date('Input Date'),
-            'file_confirmed'        : fields.binary('Delivery Slip before Deliver'),
+            'file_confirmed'        : fields.binary('Delivery Slip before Deliver'),            
             'notes_picking'         : fields.text('Delivery Notes'),
             'additional_cost_int'   : fields.selection([('no','Without Cost Component'), ('yes','With Cost Component')], 'Cost Component', readonly=False),
             'internal_move_type'    : fields.selection([('overseas','Overseas'), ('regular','Regular'), ('consignment','Consignment')], 'Move Type'),
@@ -291,7 +291,7 @@ class stock_picking(osv.osv):
                             cost_component_each_item = total_credit / (total_qty or 0.0)                    
                             result_jkt_cost = product.base_cost + cost_component_each_item
                             if product.real_price == 0:
-                                real_price = real_price = result_jkt_cost + (result_jkt_cost * (product.margin/ 100))
+                                real_price = real_price = result_jkt_cost + (result_jkt_cost * (product.margin/ 100))                                 
                             else:
                                 real_price = product.real_price
                             print "jkt_cost ", product.jkt_cost,product.base_cost, cost_component_each_item                                         
@@ -313,6 +313,7 @@ class stock_picking(osv.osv):
                             product_obj.write(cr, uid, [product.id], {
                                                                       'jkt_cost'        : result_jkt_cost,                                                                                                                                
                                                                       'real_price'      : real_price,
+                                                                      'subdist_price'   : real_price,
                                                                       'standard_price'  : result_jkt_cost,                                                              
                                                                       })
 
@@ -475,6 +476,7 @@ class stock_picking_in(osv.osv):
             'person_name'           : fields.char('Person Name', size=128),
             'date_confirmed'        : fields.date('Input Date'),
             'file_confirmed'        : fields.binary('Purchase Order File'),
+            'notes_ex'              : fields.text('Notes'),
             'consignment'           : fields.char('Sale Type'),         
             'sales_person'          : fields.char('Sales Person'),   
                 }

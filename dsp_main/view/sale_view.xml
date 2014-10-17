@@ -76,17 +76,17 @@
             <field name="inherit_id" ref="sale.view_order_form"/>
             <field name="arch" type="xml">
             	<data>            		            		
-            		<div name="discount" groups="sale.group_discount_per_so_line" position="after">						
+            		<div name="discount" groups="sale.group_discount_per_so_line" position="after">            								
             			<field name="fee"/>
                         <field name="cons_doc" readonly="1" 
                         	on_change="onchange_cons_doc(cons_doc, product_dsp_id, parent.sale_type, parent.partner_id)"/>                        
                         <field name="jkt_cost" />                        
-                        <field name="profit" />
+                        <field name="profit" invisible="1"/>
                         <field name="sub_profit" invisible="1"/>                        	            			           	
                     </div>              
                     <div name="discount" groups="sale.group_discount_per_so_line" position="replace">
                         <div name="discount" groups="sale.group_discount_per_so_line">
-                            <field name="discount" class="oe_inline"/>
+                            <field name="discount" class="oe_inline" options="{'create': False, 'create_edit': False, 'no_open': True}"/>
                         </div>
                     </div>      
             	</data>
@@ -132,6 +132,41 @@
                	</field>                       
            </field>
         </record>
-                        
+        
+        <record id="discount_list_tree_view" model="ir.ui.view">
+            <field name="name">discount.list.tree</field>
+            <field name="model">discount.list</field>            
+            <field name="arch" type="xml">   
+				<tree string="Discount List" editable="bottom">					
+					<field name="name"/>
+					<field name="discount"/>									
+				</tree>
+            </field>
+        </record>
+    	    	
+    	<record id="discount_list_form_view" model="ir.ui.view">
+            <field name="name">discount.list.form</field>
+            <field name="model">discount.list</field>            
+            <field name="arch" type="xml">   
+				<form string="Discount List">
+					<group>					
+						<field name="name"/>
+						<field name="discount"/>										
+					</group>
+				</form>
+            </field>
+        </record>
+        
+    	<record id="discount_list_action_tree" model="ir.actions.act_window">
+            <field name="name">Discount List</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="res_model">discount.list</field>            
+            <field name="view_type">form</field>
+          	<field name="view_id" ref="discount_list_tree_view"/>                                                           
+        </record>
+        
+    	<menuitem action="discount_list_action_tree" 
+    		id="menu_discount_list" parent="base.menu_product" sequence="1"/>
+    		              
 	</data>
 </openerp>

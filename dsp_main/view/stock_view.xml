@@ -69,9 +69,10 @@
 			 	<xpath expr="/form/sheet/notebook/page[@string='Additional Info']" position="after">
 		    		<page string="Shipment Confirmation">
 		 	  			<group> 
-		  					<field name="date_confirmed" attrs="{'required':['|', ('state', '=', 'assigned'), ('state', '=', 'done')]}"/> 
-							<field name="person_name" attrs="{'required':['|', ('state', '=', 'assigned'), ('state', '=', 'done')]}"/> 
-							<field name="file_confirmed" attrs="{'required':['|', ('state', '=', 'assigned'), ('state', '=', 'done')]}"/> 
+		  					<field name="date_confirmed" /> 
+							<field name="person_name" /> 
+							<field name="file_confirmed" />
+							<field name="notes_ex" />
 		  				</group> 
 		  			</page>
 				</xpath> 			
@@ -132,9 +133,10 @@
 			 	<xpath expr="/form/sheet/notebook/page[@string='Additional Info']" position="after">    		
 		  			<page string="Picking Confirmation">
 		 	  			<group> 
-		  					<field name="date_confirmed" attrs="{'required':['|', ('state', '=', 'assigned'), ('state', '=', 'done')]}"/> 
-							<field name="person_name" attrs="{'required':['|', ('state', '=', 'assigned'), ('state', '=', 'done')]}"/> 
-							<field name="file_confirmed" attrs="{'required':['|', ('state', '=', 'assigned'), ('state', '=', 'done')]}"/> 														
+		  					<field name="date_confirmed" /> 
+							<field name="person_name" /> 
+							<field name="file_confirmed" />
+							<field name="notes_ex" /> 														
 		  				</group> 
 		  			</page> 	  		
 		  			<page string="Delivery Confirmation">

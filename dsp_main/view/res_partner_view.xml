@@ -242,7 +242,7 @@
                         </page>
                         <page string="Sales Discount" name="discount">
                         	<group>
-                        		<field name="outlet_discount_line" string="Discount by Country">
+                        		<field name="outlet_discount_line" string="Discount by Country" invisible="1">
 		        					<tree>
 				        				<field name="country_id"/>
 		        						<field name="discount"/>		        					            		
@@ -265,6 +265,11 @@
                         		<field name="bypass_order" string="Bypass Order"/>
                         	</group>
                         </page>
+                        <page string="Price" name="bypass">
+                        	<group>
+                        		<field name="price_type"/>
+                        	</group>
+                        </page>
                     </notebook>
                 </sheet>
                 </form>
@@ -282,5 +287,40 @@
             </field>
         </record>               
 		
+		<record id="country_discount_tree_view" model="ir.ui.view">
+            <field name="name">country.discount.tree</field>
+            <field name="model">country.discount</field>            
+            <field name="arch" type="xml">   
+				<tree string="Country Discount" editable="bottom">					
+					<field name="country_id"/>
+					<field name="discount"/>														
+				</tree>
+            </field>
+        </record>
+    	    	
+    	<record id="country_discount_form_view" model="ir.ui.view">
+            <field name="name">country.discount.form</field>
+            <field name="model">country.discount</field>            
+            <field name="arch" type="xml">   
+				<form string="Country Discount">
+					<group>					
+						<field name="country_id"/>
+						<field name="discount"/>										
+					</group>
+				</form>
+            </field>
+        </record>
+        
+    	<record id="country_discount_action_tree" model="ir.actions.act_window">
+            <field name="name">Country Discount</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="res_model">country.discount</field>            
+            <field name="view_type">form</field>
+          	<field name="view_id" ref="country_discount_tree_view"/>                                                           
+        </record>
+        
+    	<menuitem action="country_discount_action_tree" 
+    		id="menu_country_discount" parent="base.menu_product" sequence="1"/>
+    		
 	</data>
 </openerp>

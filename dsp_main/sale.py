@@ -6,6 +6,15 @@ from datetime import datetime
 from openerp.tools import DEFAULT_SERVER_DATE_FORMAT, DEFAULT_SERVER_DATETIME_FORMAT, DATETIME_FORMATS_MAP, float_compare
 import openerp.addons.decimal_precision as dp
 
+class discount_list(osv.osv):
+    _name = "discount.list"            
+    
+    _columns = {
+            'name'        : fields.char('Name'),
+            'discount'    : fields.float('Discount', digits_compute=dp.get_precision('Product Price')),                        
+        }                        
+discount_list()
+
 class sale_shop(osv.osv):
     
     _inherit = "sale.shop"    
@@ -18,6 +27,12 @@ sale_shop()
 class sale_order(osv.osv):
     _inherit = "sale.order"
     _description = "Sales Order Inherit DSP"
+    
+    def _amount_line_tax(self, cr, uid, line, context=None):
+        val = 0.0
+        for c in self.pool.get('account.tax').compute_all(cr, uid, line.tax_id, line.price_unit * (1-(line.discount.discount or 0.0)/100.0), line.product_uom_qty, line.product_id, line.order_id.partner_id)['taxes']:
+            val += c.get('amount', 0.0)
+        return val
     
     def _amount_all(self, cr, uid, ids, field_name, arg, context=None):
         cur_obj = self.pool.get('res.currency')
@@ -341,7 +356,7 @@ class sale_order(osv.osv):
       
 sale_order()
 
-class sale_order_line(osv.osv):
+class sale_order_line(osv.osv):                
         
     def _amount_line(self, cr, uid, ids, field_name, arg, context=None):
         tax_obj = self.pool.get('account.tax')
@@ -350,7 +365,7 @@ class sale_order_line(osv.osv):
         if context is None:
             context = {}
         for line in self.browse(cr, uid, ids, context=context):
-            price = (line.price_unit * (1 - (line.discount or 0.0) / 100.0)) + line.fee
+            price = (line.price_unit * (1 - (line.discount.discount or 0.0) / 100.0)) + line.fee
             taxes = tax_obj.compute_all(cr, uid, line.tax_id, price, line.product_uom_qty, line.product_id, line.order_id.partner_id)            
             cur = line.order_id.pricelist_id.currency_id
             res[line.id] = cur_obj.round(cr, uid, cur, taxes['total'])
@@ -363,7 +378,7 @@ class sale_order_line(osv.osv):
         if context is None:
             context = {}
         for line in self.browse(cr, uid, ids, context=context):                    
-            res[line.id] = (line.price_unit * (line.discount or 0.0) / 100.0) - line.fee                                        
+            res[line.id] = (line.price_unit * (line.discount.discount or 0.0) / 100.0) - line.fee                                        
         return res
     
     _inherit = "sale.order.line"    
@@ -376,10 +391,13 @@ class sale_order_line(osv.osv):
             'sub_profit'        : fields.float('Sub Profit', digits_compute=dp.get_precision('Product Price')),
             'fee'               : fields.float('Misc. Fee', digits_compute=dp.get_precision('Product Price')),
             'total_discount'    : fields.function(_amount_discount, string='Discount Total', digits_compute=dp.get_precision('Product Price')),
-            'price_subtotal'    : fields.function(_amount_line, string='Subtotal', digits_compute= dp.get_precision('Account')),
+            'price_subtotal'    : fields.function(_amount_line, string='Subtotal', digits_compute= dp.get_precision('Account')),            
             'qty_on_hand'       : fields.float('Qty On Hand', digits_compute=dp.get_precision('Product Unit of Measure')),
             'qty_reserved'      : fields.float('Qty Reserved', digits_compute=dp.get_precision('Product Unit of Measure')),
-            'discount'          : fields.float('Discount (%)', digits_compute= dp.get_precision('Discount')),            
+            #'discount'          : fields.float('Discount (%)', digits_compute= dp.get_precision('Discount')),
+            'discount'          : fields.many2one('discount.list', 'Discount'),            
+            'discount_list_line': fields.many2one('discount.list', 'Discount List'),
+            'populate'          : fields.many2one('discount.list', 'Populate')
                 }
     
     def product_id_change(self, cr, uid, ids, pricelist, product, qty=0,
@@ -487,7 +505,8 @@ class sale_order_line(osv.osv):
                     }
         return {'value': result, 'domain': domain, 'warning': warning}
     
-    def onchange_product_dsp_id(self, cr, uid, ids, product_dsp_id, product_uom_qty, sale_type, price_list, partner_id, context=None):                    
+    def onchange_product_dsp_id(self, cr, uid, ids, product_dsp_id, product_uom_qty, sale_type, price_list, partner_id, context=None):
+                                                                                                            
         price_unit = 0.0
         discount = 0.0        
         stock_default = 0
@@ -500,7 +519,8 @@ class sale_order_line(osv.osv):
                 }            
             return result
         
-        partner_id = self.pool.get('res.partner').browse(cr, uid, partner_id, context=None)        
+        partner_id = self.pool.get('res.partner').browse(cr, uid, partner_id, context=None)      
+        price_type = partner_id.price_type  
         product = self.pool.get('product.template').browse(cr, uid, product_dsp_id, context=None)
         product_product = self.pool.get('product.product').browse(cr, uid, product_dsp_id, context=None)
         
@@ -508,58 +528,75 @@ class sale_order_line(osv.osv):
         qty_reserved = product_product.total_reserved
         
         products = self.pool.get('product.product').browse(cr, uid, product_dsp_id, context=None)
-        country = products.country_id.name
-        print country              
-                                
-        outlet_disc_id = self.pool.get('outlet.discount').search(cr, uid, [('outlet_id','=',partner_id.id),('country_id', '=', country)], context=None)
+        country = products.country_id.name                
+                                        
+        outlet_disc_id = self.pool.get('country.discount').search(cr, uid, [('country_id', '=', country)], context=None)
+        print "aaaaaaaaa", outlet_disc_id
         if outlet_disc_id:
-            outlet_disc_obj = self.pool.get('outlet.discount').browse(cr, uid, outlet_disc_id, context=None)            
-            discount = outlet_disc_obj[0].discount - partner_id.consignment_discount
+            outlet_disc_obj = self.pool.get('country.discount').browse(cr, uid, outlet_disc_id, context=None)
+            print "bbbbbbbbbbbbbbbb", outlet_disc_obj
+            if outlet_disc_obj:            
+                discount = outlet_disc_obj[0].discount
                 
-        if sale_type == 'Consignment':            
-            stock_search  = self.pool.get('stock.picking').search(cr, uid, [('type','=','internal'),('partner_id', '=', partner_id.id)], context=None)
-                    
+        discount_id = self.pool.get('discount.list').search(cr, uid, [('discount','=', discount)], context=None)
+                
+        if sale_type == 'Consignment':
+            move_line = False
+            discount = outlet_disc_obj[0].discount - partner_id.consignment_discount            
+            stock_search  = self.pool.get('stock.picking').search(cr, uid, [('type','=','internal'),('partner_id', '=', partner_id.id)], context=None)                    
             min_value = 100000000
-            for stock in stock_search:            
-                if stock < min_value:
-                    min_value = stock
-                    
-            stock_default = min_value
-            
+            if stock_search:
+                for stock in stock_search:            
+                    if stock < min_value:
+                        min_value = stock                                        
+                stock_default = min_value
+                move_line = self.pool.get('stock.picking').browse(cr, uid, stock_default, context=context).move_lines
+                            
             products = self.pool.get('product.product').browse(cr, uid, product_dsp_id, context=None)
-            product = self.pool.get('product.template').browse(cr, uid, product_dsp_id, context=None)                            
-            move_line = self.pool.get('stock.picking').browse(cr, uid, stock_default, context=context).move_lines
-                        
-            for line in move_line:
-                if line.name == product.name:
-                    price_unit = line.price_unit_view                                        
-                else:
-                    raise osv.except_osv(_('Warning Confirmation !'), _('This Internal moves has no line contains the product!"'))
-                    price_unit = 0                                                                            
+            product = self.pool.get('product.template').browse(cr, uid, product_dsp_id, context=None)            
+            
+            if move_line:
+                for line in move_line:
+                    if line.name == product.name:
+                        price_unit = line.price_unit_view                                        
+                    else:
+                        raise osv.except_osv(_('Warning Confirmation !'), _('This Internal moves has no line contains the product!"'))
+                        price_unit = 0                                                                            
         
         else:                                                                                         
             if sale_type == 'FOC':
                 discount = 100
+            elif price_type == 'Subdist Price':
+                discount = 0
+                
+            #===================================================================
+            # profit = (product.real_price - (discount * product.real_price / 100) - product.jkt_cost)
+            # sub_profit = profit * product_uom_qty
+            #===================================================================
             
-            profit = (product.real_price - (discount * product.real_price / 100) - product.jkt_cost)
-            sub_profit = profit * product_uom_qty        
-            price_unit = product.real_price          
+            if price_type == 'Real Price':         
+                price_unit = product.real_price
+            elif price_type == 'Subdist Price':
+                price_unit = product.subdist_price
             
             if product_product.foc == 'FOC':
                 price_unit = 0                      
             
-        result = {'value': {
-                    'product_id'    : product_dsp_id,
-                    'price_unit'    : price_unit,     
-                    'discount'      : discount,
-                    'jkt_cost'      : product.jkt_cost,
-                    'profit'        : profit,
-                    'sub_profit'    : sub_profit,
-                    'cons_doc'      : stock_default,     
-                    'qty_on_hand'   : qty_on_hand,
-                    'qty_reserved'  : qty_reserved,                                                                
-                    }
-                } 
+        result = {'domain' :{'discount':[('discount', '<=', discount)]},
+                    'value': {
+                              'product_id'    : product_dsp_id,
+                              'price_unit'    : price_unit,                                   
+                              'jkt_cost'        : product.jkt_cost,
+                              'discount'        : discount_id,
+                              #===========================================================
+                                # 'profit'        : profit,
+                                # 'sub_profit'    : sub_profit,
+                                #===========================================================
+                                'cons_doc'      : stock_default,     
+                                'qty_on_hand'   : qty_on_hand,
+                                'qty_reserved'  : qty_reserved, 
+                                }
+                  } 
         return result 
     
     def onchange_cons_doc(self, cr, uid, ids, cons_doc, product_dsp_id, sale_type, partner_id, context=None):

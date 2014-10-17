@@ -87,15 +87,18 @@ class product_product(osv.osv):
             name = d.get('name','')
             code = d.get('default_code',False)
             vintage = d.get('vintages',False)
-            volume = d.get('volume_l',False)                
+            volume = d.get('volume_l',False) 
+            foc = d.get('foc',False)
+                           
             if code:
                 name = '[%s] %s' % (code,name)
             if vintage:
                 name = name + ' - ' + str(vintage)
             if volume:
                 name = name + ' - ' + str(volume)
-            #else:
-            #    name = name + ' - NV'
+            if (foc == 'FOC'):
+                name = name + ' - ' + str(foc)
+                                        
             if d.get('variants'):
                 name = name + ' - %s' % (d['variants'],)
             return (d['id'], name)
@@ -113,7 +116,8 @@ class product_product(osv.osv):
                               'default_code': s.product_code or product.default_code,
                               'variants': product.variants,
                               'vintages': product.vintages,
-                              'volume_l': product.volume_l,                                  
+                              'volume_l': product.volume_l,
+                              'foc': product.foc,                                  
                               }
                     result.append(_name_get(mydict))
             else:
@@ -123,7 +127,8 @@ class product_product(osv.osv):
                           'default_code': product.default_code,
                           'variants': product.variants,
                           'vintages': product.vintages,    
-                          'volume_l': product.volume_l,                      
+                          'volume_l': product.volume_l,
+                          'foc': product.foc,                       
                           }
                 result.append(_name_get(mydict))
         return result
@@ -184,7 +189,8 @@ class product_template(osv.osv):
             'base_cost'         : fields.float('SG Cost', digits_compute=dp.get_precision('Product Price')),
             'margin'            : fields.float('Margin (%)', digits_compute=dp.get_precision('Product Price')),
             'suggest_price'     : fields.function(_compute_suggest_price, string="Suggested Price", type='float', digits_compute=dp.get_precision('Product Price'), multi="_compute_amounts"),                            
-            'real_price'        : fields.float('Product Real Price', digits_compute=dp.get_precision('Product Price')),
+            'real_price'        : fields.float('Real Price', digits_compute=dp.get_precision('Product Price')),
+            'subdist_price'     : fields.float('Subdist Price', digits_compute=dp.get_precision('Product Price')),
             'qty_reserved'      : fields.one2many('product.reserved.qty', 'product_id', 'Qty Reserved'),
             'total_reserved'    : fields.function(_compute_reserved_qty, string="Reserved Qty", type='float', digits_compute=dp.get_precision('Product Unit of Measure')),
             'qty_adjusted_in'   : fields.float('Adjusted Qty In', digits_compute=dp.get_precision('Product Unit of Measure')),

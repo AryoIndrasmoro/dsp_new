@@ -33,11 +33,13 @@ class res_partner(osv.osv):
         'bypass_order'          : fields.boolean('Bypass Order', help="Check this box if this this outlet allowed to order in outstanding payment status"),
         'outlet_discount_line'  : fields.one2many('outlet.discount', 'outlet_id', 'Discount'),
         'consignment_discount'  : fields.float('Consignment Discount', digits_compute=dp.get_precision('Product Price')),
+        'price_type'            : fields.selection([('Real Price', 'Real Price'), ('Subdist Price', 'Subdist Price')], 'Price Type'),
     }
     
     _defaults = {
             'dsp_price_list_id' : 'standard',
             'bypass_order'      : False,
+            'price_type'        : 'Real Price',
                  }
 
 res_partner()
@@ -51,3 +53,12 @@ class outlet_discount(osv.osv):
     }
     
 outlet_discount()
+
+class country_discount(osv.osv):
+    _name = 'country.discount'
+    _columns = {            
+        'country_id'        : fields.many2one('res.country', 'Country'),
+        'discount'          : fields.float('Discount (%)', digits_compute=dp.get_precision('Discount')),        
+    }
+    
+country_discount()

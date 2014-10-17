@@ -52,7 +52,8 @@
 				                    <field name="margin" class="oe_inline"/> percent
 			                	</div>			                
 		                		<field name="suggest_price"/>
-		                		<field name="real_price"/>		                		                				                
+		                		<field name="real_price"/>
+		                		<field name="subdist_price"/>		                		                				                
 		                	</group>
 	                	</group>               
 	                </page>
@@ -109,11 +110,13 @@
                 </div>       	                	
                 <field name="name" position="after">
 	            	<t t-if="record.vintages.raw_value"> - <field name="vintages"/></t>
-	            	<t t-if="record.volume_l.raw_value"> - <field name="volume_l"/></t> 	            	
+	            	<t t-if="record.volume_l.raw_value"> - <field name="volume_l"/></t>
+	            	<t t-if="record.foc.raw_value == 'FOC'"> - <field name="foc"/></t>	            	 	            		            
 	            </field>	                            	            	            
 				<ul position="inside">                    
                     <li t-if="record.type.raw_value != 'service'">Grape: <field name="grape_id"/></li>
-                    <li t-if="record.type.raw_value != 'service'">Brand: <field name="brand"/></li>                    
+                    <li t-if="record.type.raw_value != 'service'">Brand: <field name="brand"/></li>
+                    <li t-if="record.foc.raw_value == 'FOC'">Product Type: <field name="foc"/></li>                    
                 </ul>            	   
 	        </field>
 	    </record>
@@ -143,6 +146,7 @@
                 </field>                
                 <field name="virtual_available" position="after">
                 	<field name="real_price"/>
+                	<field name="subdist_price"/>
                 	<field name="foc"/>             
                 </field>
                 <field name="virtual_available" position="before">
@@ -216,6 +220,7 @@
             		<field name="margin"/>
             		<field name="suggest_price"/>
             		<field name="real_price"/>
+            		<field name="subdist_price"/>
             		<field name="foc"/>            		
             	</field>                      
             	<field name="categ_id" position="replace">
