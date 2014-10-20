@@ -673,7 +673,7 @@ class sale_order_line(osv.osv):
                 'account_id': account_id,
                 'price_unit': pu,
                 'quantity': uosqty,
-                'discount': line.discount,
+                'discount': line.discount.discount,
                 'fee' : line.fee,
                 'total_discount' : line.total_discount,
                 'uos_id': uos_id,
