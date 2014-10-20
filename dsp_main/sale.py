@@ -536,9 +536,7 @@ class sale_order_line(osv.osv):
             outlet_disc_obj = self.pool.get('country.discount').browse(cr, uid, outlet_disc_id, context=None)
             print "bbbbbbbbbbbbbbbb", outlet_disc_obj
             if outlet_disc_obj:            
-                discount = outlet_disc_obj[0].discount
-                
-        discount_id = self.pool.get('discount.list').search(cr, uid, [('discount','=', discount)], context=None)
+                discount = outlet_disc_obj[0].discount                    
                 
         if sale_type == 'Consignment':
             move_line = False
@@ -580,8 +578,11 @@ class sale_order_line(osv.osv):
                 price_unit = product.subdist_price
             
             if product_product.foc == 'FOC':
-                price_unit = 0                      
+                price_unit = 0   
+                discount = 0                   
             
+        discount_id = self.pool.get('discount.list').search(cr, uid, [('discount','=', discount)], context=None)
+        
         result = {'domain' :{'discount':[('discount', '<=', discount)]},
                     'value': {
                               'product_id'    : product_dsp_id,
