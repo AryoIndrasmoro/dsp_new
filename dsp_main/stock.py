@@ -141,8 +141,9 @@ class stock_picking(osv.osv):
                 for move in pick.move_lines:                                        
                     if pick.type == "in":
                         purchase_obj_id = self.pool.get('purchase.order.line').search(cr, uid, [('order_id','=',pick.purchase_id.id),('product_id','=',move.product_id.id)])
-                        purchase_obj = self.pool.get('purchase.order.line').browse(cr, uid, purchase_obj_id, context=None)                                    
-                        price_idr = purchase_obj[0].price_idr                                                                     
+                        purchase_obj = self.pool.get('purchase.order.line').browse(cr, uid, purchase_obj_id, context=None)
+                        if purchase_obj:                                    
+                            price_idr = purchase_obj[0].price_idr                                                                                        
                                                                 
                     if move.state in ('done', 'cancel'):
                         continue
@@ -586,6 +587,11 @@ class stock_move(osv.osv):
             todo = []
 
         for move in self.browse(cr, uid, ids, context=context):
+            if move.type:
+                moves_type = True
+            else:
+                moves_type = False
+                
             if move.state in ['done','cancel']:
                 continue
             move_ids.append(move.id)
@@ -604,14 +610,15 @@ class stock_move(osv.osv):
                             wf_service.trg_write(uid, 'stock.picking', move.move_dest_id.picking_id.id, cr)
                         if move.move_dest_id.auto_validate:
                             self.action_done(cr, uid, [move.move_dest_id.id], context=context)
-
-            #self._create_product_valuation_moves(cr, uid, move, context=context)
+            
+            if move.type:                
+                self._create_product_valuation_moves(cr, uid, move, context=context)
             if move.state not in ('confirmed','done','assigned'):
                 todo.append(move.id)
 
         if todo:
             self.action_confirm(cr, uid, todo, context=context)
-
+                                                    
         self.write(cr, uid, move_ids, {'state': 'done', 'date': time.strftime(DEFAULT_SERVER_DATETIME_FORMAT)}, context=context)
         for id in move_ids:
              wf_service.trg_trigger(uid, 'stock.move', id, cr)
@@ -888,9 +895,9 @@ class stock_adjustment(osv.osv):
             'location_dest_id_adj'  : fields.many2one('stock.location', 'Destination Location', required=True),
             'state'                 : fields.selection([('draft', 'Draft'),('done', 'Done'),('cancel', 'Cancel')], 'Status', readonly=True),
             'qty'                   : fields.float('Qty to Return', digits_compute= dp.get_precision('Product Unit Of Measure')),
-            'person_name'           : fields.char('Person Name', size=128, required=True),
-            'date_confirmed'        : fields.date('Input Date', required=True),
-            'file_confirmed'        : fields.binary('Confirmation File', required=True),
+            'person_name'           : fields.char('Person Name', size=128),
+            'date_confirmed'        : fields.date('Input Date'),
+            'file_confirmed'        : fields.binary('Confirmation File'),
         }      
     
     _defaults = {
