@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="utf-8"?>
+<openerp>
+    <data>			                   
+		<record id="view_partner_form_pdbi" model="ir.ui.view">
+            <field name="name">res.partner.form.pdbi</field>
+            <field name="model">res.partner</field>
+            <field name="inherit_id" ref="base.view_partner_form"/>            
+            <field name="arch" type="xml">
+            	<field name="name" position="after">
+            		<field name="last_name"/>
+            	</field>
+            	<xpath expr="/form/sheet/group/group/field[@name='website']" position="after">
+            		<field name="type_id"/>
+            		<field name="industry_id"/>
+            	</xpath>
+        	</field>
+        </record>	    		
+        
+        <record id="customer_type_tree_view" model="ir.ui.view">
+            <field name="name">customer.type.tree</field>
+            <field name="model">customer.type</field>            
+            <field name="arch" type="xml">   
+				<tree string="Customer Type" editable="bottom">					
+					<field name="name"/>
+					<field name="description"/>									
+				</tree>
+            </field>
+        </record>
+    	    	
+    	<record id="customer_type_form_view" model="ir.ui.view">
+            <field name="name">customer.type.form</field>
+            <field name="model">customer.type</field>            
+            <field name="arch" type="xml">   
+				<form string="Customer Type">
+					<group>					
+						<field name="name"/>
+						<field name="description"/>									
+					</group>
+				</form>
+            </field>
+        </record>
+        
+    	<record id="customer_type_action_tree" model="ir.actions.act_window">
+            <field name="name">Customer Type</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="res_model">customer.type</field>            
+            <field name="view_type">form</field>
+          	<field name="view_id" ref="customer_type_tree_view"/>                                                           
+        </record>
+        
+    	<menuitem action="customer_type_action_tree" 
+    		id="menu_customer_type" parent="base.menu_sales" sequence="1"/>
+    		
+    	<record id="customer_industry_tree_view" model="ir.ui.view">
+            <field name="name">customer.industry.tree</field>
+            <field name="model">customer.industry</field>            
+            <field name="arch" type="xml">   
+				<tree string="Customer Industry" editable="bottom">					
+					<field name="name"/>
+					<field name="description"/>									
+				</tree>
+            </field>
+        </record>
+    	    	
+    	<record id="customer_industry_form_view" model="ir.ui.view">
+            <field name="name">customer.industry.form</field>
+            <field name="model">customer.industry</field>            
+            <field name="arch" type="xml">   
+				<form string="Customer Industry">
+					<group>					
+						<field name="name"/>
+						<field name="description"/>									
+					</group>
+				</form>
+            </field>
+        </record>
+        
+    	<record id="customer_industry_action_tree" model="ir.actions.act_window">
+            <field name="name">Customer Industry</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="res_model">customer.industry</field>            
+            <field name="view_type">form</field>
+          	<field name="view_id" ref="customer_industry_tree_view"/>                                                           
+        </record>
+        
+    	<menuitem action="customer_industry_action_tree" 
+    		id="menu_customer_industry" parent="base.menu_sales" sequence="1"/>
+	</data>
+</openerp>
