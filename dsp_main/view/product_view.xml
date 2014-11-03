@@ -5,7 +5,13 @@
 			<field name="name">product.normal.form.inherit</field>
 			<field name="model">product.product</field>
 			<field name="inherit_id" ref="product.product_normal_form_view"/>
-			<field name="arch" type="xml">				
+			<field name="arch" type="xml">		
+				<page string="Procurements" position="attributes">
+					<attribute name="invisible">True</attribute>					
+				</page>		
+				<page string="Sales" position="attributes">
+					<attribute name="invisible">True</attribute>					
+				</page>
 				<page string="Information" position="after">
 					<page string="Wine Description">
 						<group>
@@ -33,27 +39,27 @@
 							</group>
 						</group>
 					</page>
-					<page string="Supplier Info">
+					<page string="Supplier Info" groups="base.group_sale_manager">
 						<group>							
 							<field name="supplier_dsp" />																			
 						</group>
-					</page>
+					</page>					
 				</page>				
 				<xpath expr="/form/sheet/notebook/page[@string='Sales']" position="after">
-	                <page string="Price List" groups="base.group_erp_manager">
-	                	<group>
-	                		<group>
-		                		<field name="base_cost" readonly="1"/>		                		
-		                		<field name="jkt_cost" readonly="1"/>
-		                	</group>
+	                <page string="Price List" groups="base.group_sale_manager">
+	                	<group>	                		
 		                	<group>
-		                		<label for="margin"/>
-			                	<div>
+		                		<label for="margin" groups="base.group_erp_manager"/>
+			                	<div groups="base.group_erp_manager">
 				                    <field name="margin" class="oe_inline"/> percent
 			                	</div>			                
 		                		<field name="suggest_price"/>
 		                		<field name="real_price"/>
 		                		<field name="subdist_price"/>		                		                				                
+		                	</group>
+		                	<group>
+		                		<field name="base_cost" readonly="1" groups="base.group_erp_manager"/>		                		
+		                		<field name="jkt_cost" readonly="1" groups="base.group_erp_manager"/>
 		                	</group>
 	                	</group>               
 	                </page>
@@ -283,9 +289,18 @@
             <field name="model">product.product</field>
             <field name="inherit_id" ref="product.product_normal_form_view"/>
             <field name="arch" type="xml">                
-                <xpath expr="//group[@string='Stock and Expected Variations']" position="inside">                    
+                <xpath expr="//group[@string='Stock and Expected Variations']" position="inside">                	                	                  
                    	<field name="total_reserved" class="oe_inline"/>                   	                       
                 </xpath>                
+                <xpath expr="//group[@string='Stock and Expected Variations']/field[@name='incoming_qty']" position="attributes">                	                	                  
+					<attribute name="groups">base.group_sale_manager</attribute>                   	                       
+                </xpath>
+                <xpath expr="//group[@string='Stock and Expected Variations']/field[@name='outgoing_qty']" position="attributes">                	                	                  
+					<attribute name="groups">base.group_sale_manager</attribute>                   	                       
+                </xpath>
+                <xpath expr="//group[@string='Stock and Expected Variations']/field[@name='virtual_available']" position="attributes">                	                	                  
+					<attribute name="groups">base.group_sale_manager</attribute>                   	                       
+                </xpath>
                 <!--<xpath expr="//group[@string='Stock and Expected Variations']" position="after">
                 	<group string="Stock Adjustment">                    
 	                   	<field name="qty_adjusted_in" readonly="1"/>
