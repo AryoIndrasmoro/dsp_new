@@ -112,10 +112,31 @@
                 </field>              
                 <label for="delay" position="replace">
                 	<label for="delay" invisible="1"/>
-                </label>	        	
+                </label>	        	                
+                <field name="incoterm" position="attributes">
+                	<attribute name="invisible">True</attribute>
+                </field>
+                <field name="picking_policy" position="attributes">
+                	<attribute name="invisible">True</attribute>
+                </field>
+                <field name="order_policy" position="attributes">
+                	<attribute name="invisible">True</attribute>
+                </field>
+                <field name="fiscal_position" position="attributes">
+                	<attribute name="invisible">True</attribute>
+                </field>
+                <field name="origin" position="attributes">
+                	<attribute name="invisible">True</attribute>
+                </field>
+                <field name="section_id" position="attributes">
+                	<attribute name="invisible">True</attribute>
+                </field>
+                <field name="categ_ids" position="attributes">
+                	<attribute name="invisible">True</attribute>
+                </field>                                       
             </field>
-    	</record>    	    	
-    	
+    	</record>    	    	                      
+        
     	<record id="view_order_tree_dsp2" model="ir.ui.view">
             <field name="name">sale.order.tree.dsp2</field>
             <field name="model">sale.order</field>            
