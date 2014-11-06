@@ -147,7 +147,7 @@ class sale_order(osv.osv):
                     ], 'Status', readonly=True, track_visibility='onchange',
                     help="Gives the status of the quotation or sales order. \nThe exception status is automatically set when a cancel operation occurs in the processing of a document linked to the sales order. \nThe 'Waiting Schedule' status is set when the invoice is confirmed but waiting for the scheduler to run on the order date.", select=True),               
             }
-    
+        
     def _prepare_order_line_move(self, cr, uid, order, line, picking_id, date_planned, context=None):
         location_id = order.shop_id.warehouse_id.lot_stock_id.id
         output_id = order.shop_id.warehouse_id.lot_output_id.id

@@ -34,6 +34,7 @@ class res_partner(osv.osv):
         'outlet_discount_line'  : fields.one2many('outlet.discount', 'outlet_id', 'Discount'),
         'consignment_discount'  : fields.float('Consignment Discount', digits_compute=dp.get_precision('Product Price')),
         'price_type'            : fields.selection([('Real Price', 'Real Price'), ('Subdist Price', 'Subdist Price')], 'Price Type'),
+        'user_id_dsp'           : fields.many2many('res.users','res_partner_users_dsp_rel','pid','uid','Salesperson'),
     }
     
     _defaults = {

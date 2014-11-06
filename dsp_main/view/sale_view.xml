@@ -4,7 +4,8 @@
             <field name="name">sale.order.pricelist.form</field>
             <field name="model">sale.order</field>
             <field name="inherit_id" ref="sale.view_order_form"/>
-            <field name="arch" type="xml">            		
+            <field name="context">{"search_default_sale_type":1}</field>
+            <field name="arch" type="xml">            	                 
 				<button name="action_button_confirm" position="replace">
 					<button name="action_button_confirm" states="quotation_confirm" string="Confirm Sale" type="object" groups="base.group_user"/>
 				</button>				
@@ -43,8 +44,8 @@
 							<field name="file_confirmed_order" />
 		 	  			</group>
 			  		</page>
-				</page>			    
-        			            		
+				</page>			            			           	
+        		        		
         		<xpath expr="//form/sheet/notebook/page[@string='Order Lines']/field[@name='order_line']/form/group/group[1]/field[@name='price_unit']" position="attributes">
         			<attribute name="groups">base.group_erp_manager</attribute>
         		</xpath>	
@@ -63,9 +64,9 @@
         		</field>
         		
         		<xpath expr="//form/sheet/group/group/field[@name='partner_id']" position="replace">
-        			<field name="partner_id" on_change="onchange_partner_id_dsp(sale_type, partner_id, context)" domain="[('customer','=',True)]" context="{'search_default_customer':1, 'show_address': 1}" options='{"always_reload": True}'/>           		
+        			<field name="partner_id" on_change="onchange_partner_id_dsp(sale_type, partner_id, context)" domain="[('customer','=',True),('user_id_dsp','=',uid)]" context="{'search_default_customer':1, 'show_address': 1}" options='{"always_reload": True}'/>           		
         		</xpath>
-        		    		        		
+        		    		        		        		    		        		
             </field>
     	</record>
     	
@@ -74,43 +75,44 @@
             <field name="name">sale.order.pricelist.form2</field>
             <field name="model">sale.order</field>
             <field name="inherit_id" ref="sale.view_order_form"/>
-            <field name="arch" type="xml">
-            	<data>            		            		
-            		<div name="discount" groups="sale.group_discount_per_so_line" position="after">            								
-            			<field name="fee"/>
-                        <field name="cons_doc" readonly="1" 
-                        	on_change="onchange_cons_doc(cons_doc, product_dsp_id, parent.sale_type, parent.partner_id)"/>                        
-                        <field name="jkt_cost" invisible="1"/>                        
-                        <field name="profit" invisible="1"/>
-                        <field name="sub_profit" invisible="1"/>                        	            			           	
-                    </div>              
-                    <div name="discount" groups="sale.group_discount_per_so_line" position="replace">
-                        <div name="discount" groups="sale.group_discount_per_so_line">
-                            <field name="discount" class="oe_inline" options="{'create': False, 'create_edit': False, 'no_open': True}"/>
-                        </div>
-                    </div>    
-                    <field name="tax_id" position="replace">
-                    	<field name="tax_id" invisible="1"/>
-                    </field>                                                        
-                    <field name="th_weight" position="replace">
-                    	<field name="th_weight" invisible="1"/>
-                    </field>
-                    <field name="address_allotment_id" position="replace">
-                    	<field name="address_allotment_id" invisible="1"/>
-                    </field>
-                    <field name="type" position="replace">
-                    	<field name="type" invisible="1"/>
-                    </field>                    
-                    <field name="property_ids" position="replace">
-                    	<field name="property_ids" invisible="1"/>
-                    </field>
-                    <field name="delay" position="replace">
-                    	<field name="delay" invisible="1"/>
-                    </field>              
-                    <label for="delay" position="replace">
-                    	<label for="delay" invisible="1"/>
-                    </label>
-            	</data>            	
+            <field name="arch" type="xml">            	
+            	<button name="action_view_delivery" position="attributes">
+            		<attribute name="groups">base.group_erp_manager</attribute>
+            	</button>            	          	
+        		<div name="discount" groups="sale.group_discount_per_so_line" position="after">            								
+        			<field name="fee"/>
+                    <field name="cons_doc" readonly="1" 
+                    	on_change="onchange_cons_doc(cons_doc, product_dsp_id, parent.sale_type, parent.partner_id)"/>                        
+                    <field name="jkt_cost" invisible="1"/>                        
+                    <field name="profit" invisible="1"/>
+                    <field name="sub_profit" invisible="1"/>                        	            			           	
+                </div>              
+                <div name="discount" groups="sale.group_discount_per_so_line" position="replace">
+                    <div name="discount" groups="sale.group_discount_per_so_line">
+                        <field name="discount" class="oe_inline" options="{'create': False, 'create_edit': False, 'no_open': True}"/>
+                    </div>
+                </div>    
+                <field name="tax_id" position="replace">
+                	<field name="tax_id" invisible="1"/>
+                </field>                                                        
+                <field name="th_weight" position="replace">
+                	<field name="th_weight" invisible="1"/>
+                </field>
+                <field name="address_allotment_id" position="replace">
+                	<field name="address_allotment_id" invisible="1"/>
+                </field>
+                <field name="type" position="replace">
+                	<field name="type" invisible="1"/>
+                </field>                    
+                <field name="property_ids" position="replace">
+                	<field name="property_ids" invisible="1"/>
+                </field>
+                <field name="delay" position="replace">
+                	<field name="delay" invisible="1"/>
+                </field>              
+                <label for="delay" position="replace">
+                	<label for="delay" invisible="1"/>
+                </label>	        	
             </field>
     	</record>    	    	
     	

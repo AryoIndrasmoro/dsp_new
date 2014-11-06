@@ -42,7 +42,7 @@
 					<page string="Supplier Info" groups="base.group_sale_manager">
 						<group>							
 							<field name="supplier_dsp" />																			
-						</group>
+ 						</group>
 					</page>					
 				</page>				
 				<xpath expr="/form/sheet/notebook/page[@string='Sales']" position="after">
@@ -151,12 +151,15 @@
                 	<field name="lst_price" invisible='1'/>                	              
                 </field>                
                 <field name="virtual_available" position="after">
-                	<field name="real_price"/>
-                	<field name="subdist_price"/>
+                	<field name="real_price" groups="base.group_sale_manager"/>
+                	<field name="subdist_price" groups="base.group_sale_manager"/>
                 	<field name="foc"/>             
                 </field>
                 <field name="virtual_available" position="before">
                 	<field name="total_reserved"/>                	    
+                </field>
+                <field name="virtual_available" position="attributes">
+                	<attribute name="groups">base.group_sale_manager</attribute>                	    
                 </field>
             </field>
        	</record>
@@ -290,7 +293,10 @@
             <field name="inherit_id" ref="product.product_normal_form_view"/>
             <field name="arch" type="xml">                
                 <xpath expr="//group[@string='Stock and Expected Variations']" position="inside">                	                	                  
-                   	<field name="total_reserved" class="oe_inline"/>                   	                       
+                   	<field name="total_reserved" class="oe_inline"/>         
+                   	<button string="update" position="attributes">
+                   		<attribute name="groups">base.group_sale_manager</attribute>	
+                   	</button>          	                       
                 </xpath>                
                 <xpath expr="//group[@string='Stock and Expected Variations']/field[@name='incoming_qty']" position="attributes">                	                	                  
 					<attribute name="groups">base.group_sale_manager</attribute>                   	                       
@@ -320,7 +326,7 @@
         </record>
         
     	<menuitem action="product_list_action_tree" 
-    		id="menu_product_list" parent="base.menu_product" sequence="1"/>
+    		id="menu_product_list" parent="base.menu_product" sequence="1" groups="base.group_sale_manager"/>
     	
     	<record id="product_region_tree_view" model="ir.ui.view">
             <field name="name">product.region.tree</field>

@@ -8,6 +8,7 @@
 		    <field name="res_model">res.partner</field>
 		    <field name="view_type">form</field>
 		    <field name="view_mode">kanban,tree,form</field>
+		    <field name="domain">[('type','=','contact')]</field>
 		    <field name="context">{"search_default_customer":1}</field>
 		    <field name="search_view_id" ref="base.view_res_partner_filter"/>
 		    <field name="help" type="html">
@@ -42,6 +43,21 @@
 	        </field>
 	    </record>
 	    
+	    <record id="view_res_partner_filter" model="ir.ui.view">
+            <field name="name">res.partner.select.dsp</field>
+            <field name="model">res.partner</field>
+            <field name="inherit_id" ref="base.view_res_partner_filter"/>            
+            <field name="arch" type="xml">
+            	<filter help="My Partners" position="replace">                               
+               		<filter help="My Partners" icon="terp-personal+" domain="[('user_id','=',uid)]" name="mypartner"/>
+               	</filter>                          
+               	<field name="name" position="replace">
+               		<field name="name"
+                       filter_domain="[('name','ilike',self),'|',('user_id','=',uid),('user_id','=',False)]"/>
+                </field>
+            </field>
+        </record>
+        
         <record id="base.view_partner_form" model="ir.ui.view">
             <field name="name">res.partner.form</field>
             <field name="model">res.partner</field>
@@ -219,7 +235,7 @@
                         <page string="Sales &amp; Purchases">
                             <group>
                                 <group>
-                                    <field name="user_id"/>
+                                    <field name="user_id"/>                                    
                                     <field name="company_id" groups="base.group_multi_company" widget="selection"/>
                                     <field name="discount" invisible="1"/>    
                                 </group>
@@ -268,6 +284,11 @@
                         <page string="Price" name="bypass">
                         	<group>
                         		<field name="price_type"/>
+                        	</group>
+                        </page>
+                        <page string="SalesPerson" name="salesperson">
+                        	<group>
+                        		<field name="user_id_dsp"/>
                         	</group>
                         </page>
                     </notebook>

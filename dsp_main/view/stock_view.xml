@@ -23,10 +23,10 @@
 		  			</page>
 		  			<page string="Delivery Confirmation">
 		 	  			<group> 
-		  					<field name="date_confirmed_ex" /> 
-							<field name="person_name_ex" /> 
-							<field name="file_confirmed_ex" />
-							<field name="notes_ex" />
+		  					<field name="date_confirmed_ex"/> 
+							<field name="person_name_ex"/> 
+							<field name="file_confirmed_ex"/>
+							<field name="notes_ex"/>
 		  				</group> 
 		  			</page>
 				</xpath>		 	 	   	 
@@ -135,16 +135,16 @@
 		 	  			<group> 
 		  					<field name="date_confirmed" /> 
 							<field name="person_name" /> 
-							<field name="file_confirmed" />
-							<field name="notes_ex" /> 														
+							<field name="file_confirmed" />														
+							<field name="notes_ex" />					
 		  				</group> 
 		  			</page> 	  		
 		  			<page string="Delivery Confirmation">
 		 	  			<group> 
-		  					<field name="date_confirmed_ex" /> 
-							<field name="person_name_ex" />
-							<field name="file_confirmed_ex" />
-							<field name="notes_ex" />
+		  					<field name="date_confirmed_ex" attrs="{'required':[('state', '=', 'assigned')]}"/> 
+							<field name="person_name_ex" attrs="{'required':[('state', '=', 'assigned')]}"/>
+							<field name="file_confirmed_ex" attrs="{'required':[('state', '=', 'assigned')]}"/>
+							<field name="notes_ex" />							
 		  				</group> 
 		  			</page>
 				</xpath> 	   	  				

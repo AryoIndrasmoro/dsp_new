@@ -447,10 +447,10 @@ class stock_picking_out(osv.osv):
     _columns = {            
             'person_name'           : fields.char('Person Name', size=128),
             'date_confirmed'        : fields.date('Input Date'),
-            'file_confirmed'        : fields.binary('Input File'),
+            'file_confirmed'        : fields.binary('Input File'),            
             'person_name_ex'        : fields.char('Person Name', size=128),
             'date_confirmed_ex'     : fields.date('Input Date'),
-            'file_confirmed_ex'     : fields.binary('Input File'),
+            'file_confirmed_ex'     : fields.binary('Input File'),            
             'notes_ex'              : fields.text('Notes'),
             'sale_ref'              : fields.many2one('sale.order', 'Source Document'),
             'consignment'           : fields.char('Sale Type'),
