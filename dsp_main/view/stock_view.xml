@@ -113,6 +113,9 @@
 			 	<button name="force_assign" position="replace">                                    
                 	<button name="force_assign" states="confirmed" string="Force Availability" type="object" class="oe_highlight" groups="base.group_user" invisible="1"/>
                 </button>		 		
+                <button string="Print Delivery Slip" position="attributes">                                    
+					<attribute name="invisible">True</attribute>                	
+                </button>
 			 	<field name="partner_id" position="after">
 			 		<field name="sale_id"/>
 			 	</field>
