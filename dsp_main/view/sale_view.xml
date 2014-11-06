@@ -143,8 +143,11 @@
             <field name="inherit_id" ref="sale.view_order_tree"/>
             <field name="arch" type="xml">               	
                 <field name="amount_total" position="after">
-                	<field name="total_fee"/>	
-                </field>	               
+                	<field name="total_fee"/>
+                	<field name="payment_term"/>
+                	<field name="shipped"/>
+                	<field name="invoiced"/>	
+                </field>	                               
             </field>
         </record>
         
