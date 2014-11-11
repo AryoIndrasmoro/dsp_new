@@ -60,7 +60,8 @@
         		
         		<field name="product_dsp_id" position="after">
         			<field name="qty_on_hand" readonly="1"/>
-        			<field name="qty_reserved" readonly="1"/>
+        			<field name="qty_outgoing" readonly="1"/>
+        			<field name="qty_reserved" readonly="1"/>        			                		
         		</field>
         		
         		<xpath expr="//form/sheet/group/group/field[@name='partner_id']" position="replace">
@@ -112,7 +113,7 @@
                 </field>              
                 <label for="delay" position="replace">
                 	<label for="delay" invisible="1"/>
-                </label>	        	                
+                </label>	                                   	                                   
                 <field name="incoterm" position="attributes">
                 	<attribute name="invisible">True</attribute>
                 </field>
@@ -134,6 +135,9 @@
                 <field name="categ_ids" position="attributes">
                 	<attribute name="invisible">True</attribute>
                 </field>                                       
+                <field name="user_id" position="before">
+                	<field name="created_by" readonly="True"/>
+                </field>                               
             </field>
     	</record>    	    	                      
         
@@ -143,11 +147,14 @@
             <field name="inherit_id" ref="sale.view_order_tree"/>
             <field name="arch" type="xml">               	
                 <field name="amount_total" position="after">
-                	<field name="total_fee"/>
+                	<field name="total_fee" sum="Total Misc Fee"/>
                 	<field name="payment_term"/>
                 	<field name="shipped"/>
                 	<field name="invoiced"/>	
-                </field>	                               
+                </field>	                    
+                <field name="user_id" position="before">
+                	<field name="created_by"/>
+                </field>                          
             </field>
         </record>
         

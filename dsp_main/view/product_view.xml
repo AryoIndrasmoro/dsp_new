@@ -5,7 +5,7 @@
 			<field name="name">product.normal.form.inherit</field>
 			<field name="model">product.product</field>
 			<field name="inherit_id" ref="product.product_normal_form_view"/>
-			<field name="arch" type="xml">		
+			<field name="arch" type="xml">									               
 				<page string="Procurements" position="attributes">
 					<attribute name="invisible">True</attribute>					
 				</page>		
@@ -46,26 +46,26 @@
 					</page>					
 				</page>				
 				<xpath expr="/form/sheet/notebook/page[@string='Sales']" position="after">
-	                <page string="Price List" groups="base.group_sale_manager">
+	                <page string="Price List">
 	                	<group>	                		
 		                	<group>
-		                		<label for="margin" groups="base.group_erp_manager"/>
-			                	<div groups="base.group_erp_manager">
+		                		<label for="margin" groups="base.group_sale_manager"/>
+			                	<div groups="base.group_sale_manager">
 				                    <field name="margin" class="oe_inline"/> percent
 			                	</div>			                
-		                		<field name="suggest_price"/>
+		                		<field name="suggest_price" groups="base.group_sale_salesman_all_leads"/>
 		                		<field name="real_price"/>
-		                		<field name="subdist_price"/>		                		                				                
+		                		<field name="subdist_price" groups="base.group_sale_salesman_all_leads"/>		                		                				                
 		                	</group>
 		                	<group>
-		                		<field name="base_cost" readonly="1" groups="base.group_erp_manager"/>		                		
-		                		<field name="jkt_cost" readonly="1" groups="base.group_erp_manager"/>
+		                		<field name="jkt_cost" readonly="1" groups="base.group_sale_manager"/>
+		                		<field name="base_cost" readonly="1" groups="base.group_sale_manager"/>		                				                		
 		                	</group>
 	                	</group>               
 	                </page>
 	            </xpath>
 	            <xpath expr="/form/sheet/notebook/page[@string='Inventory']" position="after">
-	                <page string="Reserved Qty">
+	                <page string="Reserved Qty" invisible="1">
 	                	<group>
 	                		<field name="qty_reserved" nolabel="1">
 	                			<tree>
@@ -151,13 +151,10 @@
                 	<field name="lst_price" invisible='1'/>                	              
                 </field>                
                 <field name="virtual_available" position="after">
-                	<field name="real_price" groups="base.group_sale_manager"/>
+                	<field name="real_price" />
                 	<field name="subdist_price" groups="base.group_sale_manager"/>
                 	<field name="foc"/>             
-                </field>
-                <field name="virtual_available" position="before">
-                	<field name="total_reserved"/>                	    
-                </field>
+                </field>                               
                 <field name="virtual_available" position="attributes">
                 	<attribute name="groups">base.group_sale_manager</attribute>                	    
                 </field>
@@ -292,27 +289,33 @@
             <field name="model">product.product</field>
             <field name="inherit_id" ref="product.product_normal_form_view"/>
             <field name="arch" type="xml">                
-                <xpath expr="//group[@string='Stock and Expected Variations']" position="inside">                	                	                  
-                   	<field name="total_reserved" class="oe_inline"/>         
-                   	<button string="update" position="attributes">
-                   		<attribute name="groups">base.group_sale_manager</attribute>	
-                   	</button>          	                       
-                </xpath>                
+            	<button string="update" position="attributes">
+            		<attribute name="groups">base.group_sale_manager</attribute>
+            	</button>
+            	<button string="Orderpoints" position="attributes">
+            		<attribute name="invisible">True</attribute>
+            	</button>
+            	<button string="Request Procurement" position="attributes">
+            		<attribute name="invisible">True</attribute>
+            	</button>            	                               
                 <xpath expr="//group[@string='Stock and Expected Variations']/field[@name='incoming_qty']" position="attributes">                	                	                  
-					<attribute name="groups">base.group_sale_manager</attribute>                   	                       
-                </xpath>
-                <xpath expr="//group[@string='Stock and Expected Variations']/field[@name='outgoing_qty']" position="attributes">                	                	                  
-					<attribute name="groups">base.group_sale_manager</attribute>                   	                       
-                </xpath>
+					<attribute name="groups">base.group_sale_salesman_all_leads</attribute>                   	                       
+                </xpath>                
                 <xpath expr="//group[@string='Stock and Expected Variations']/field[@name='virtual_available']" position="attributes">                	                	                  
-					<attribute name="groups">base.group_sale_manager</attribute>                   	                       
+					<attribute name="groups">base.group_sale_salesman_all_leads</attribute>                   	                       
                 </xpath>
                 <!--<xpath expr="//group[@string='Stock and Expected Variations']" position="after">
                 	<group string="Stock Adjustment">                    
 	                   	<field name="qty_adjusted_in" readonly="1"/>
 	                   	<field name="qty_adjusted_out" readonly="1"/>                   	                       
 	                </group>
-                </xpath>-->
+                </xpath>-->             
+                <field name="incoming_qty" position="attributes">
+                	<attribute name="groups">base.group_sale_manager</attribute>                	    
+                </field>
+                <field name="virtual_available" position="attributes">
+                	<attribute name="groups">base.group_sale_manager</attribute>                	    
+                </field>   
             </field>
         </record>
         

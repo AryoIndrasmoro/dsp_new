@@ -37,7 +37,7 @@ This module covers: test
     * Customer and Supplier Payments
     """,
     'website': 'http://www.futuratechgroup.com',
-    'depends' : ['base','purchase','stock','product','account','account_voucher','sale','sale_crm','report_webkit'],
+    'depends' : ['base','purchase','stock','product','account','account_voucher','sale','sale_crm','report_webkit','procurement','sale_stock'],
     'data': [
         'view/product_view.xml',
         'view/account_invoice_view.xml',

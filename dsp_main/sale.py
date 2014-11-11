@@ -98,6 +98,7 @@ class sale_order(osv.osv):
     
     _columns ={
                'payment_term'           : fields.many2one('account.payment.term', 'Payment Term', required = True),
+               'created_by'             : fields.many2one('res.users', 'Created By', select=True, track_visibility='onchange'),
                'partner_id'             : fields.many2one('res.partner', 'Outlet/Customer', readonly=True, states={'draft': [('readonly', False)], 'sent': [('readonly', False)]}, required=True, change_default=True, select=True, track_visibility='always'),
                'sale_type'              : fields.selection([('FOC', 'FOC'), ('Consignment', 'Consignment'),('Direct Selling','Direct Selling') ], 'Sale Type'),
                'person_name'            : fields.char('Person Name', size=128),
@@ -351,7 +352,8 @@ class sale_order(osv.osv):
     _defaults = {
             'dsp_price_list_id' : 'Real Price',
             'sale_type' : 'Direct Selling',  
-            'order_policy' : 'On Demand',          
+            'order_policy' : 'On Demand',   
+            'created_by' : lambda obj, cr, uid, context: uid,       
                  }
       
 sale_order()
@@ -393,6 +395,7 @@ class sale_order_line(osv.osv):
             'total_discount'    : fields.function(_amount_discount, string='Discount Total', digits_compute=dp.get_precision('Product Price')),
             'price_subtotal'    : fields.function(_amount_line, string='Subtotal', digits_compute= dp.get_precision('Account')),            
             'qty_on_hand'       : fields.float('Qty On Hand', digits_compute=dp.get_precision('Product Unit of Measure')),
+            'qty_outgoing'      : fields.float('Qty Outgoing', digits_compute=dp.get_precision('Product Unit of Measure')),
             'qty_reserved'      : fields.float('Qty Reserved', digits_compute=dp.get_precision('Product Unit of Measure')),
             #'discount'          : fields.float('Discount (%)', digits_compute= dp.get_precision('Discount')),
             'discount'          : fields.many2one('discount.list', 'Discount'),            
@@ -526,6 +529,7 @@ class sale_order_line(osv.osv):
         
         qty_on_hand = product_product.qty_available
         qty_reserved = product_product.total_reserved
+        qty_outgoing = product_product.outgoing_qty
         
         products = self.pool.get('product.product').browse(cr, uid, product_dsp_id, context=None)
         country = products.country_id.name                
@@ -595,7 +599,8 @@ class sale_order_line(osv.osv):
                                 #===========================================================
                                 'cons_doc'      : stock_default,     
                                 'qty_on_hand'   : qty_on_hand,
-                                'qty_reserved'  : qty_reserved, 
+                                'qty_reserved'  : qty_reserved,
+                                'qty_outgoing'  : qty_outgoing,  
                                 }
                   } 
         return result 
