@@ -150,6 +150,11 @@
 							<field name="notes_ex" invisible="1"/>																			
 		  				</group> 
 		  			</page>
+		  			<page string="Delivery Notes">
+		 	  			<group> 
+		  					<field name="notes_ex"/> 																									
+		  				</group> 
+		  			</page>
 				</xpath> 	   	  				
 			 </field>
 		</record>
