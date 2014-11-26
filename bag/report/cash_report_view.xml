@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="utf-8"?>
+<openerp>
+	<data>	    		 	    		
+	    	        	 
+	    <record id="view_cash_report_bag_tree" model="ir.ui.view">
+	        <field eval="1" name="priority"/>
+	        <field name="name">cash.report.bag.tree</field>
+	        <field name="model">cash.report.bag</field>
+	        <field name="arch" type="xml">
+	            <tree string="Cash Report" create="false">
+	                <field name="type" />	    
+	                <field name="description" />	            	
+	            	<field name="date" />	            	 
+            	    <field name="category" />
+	            	<field name="amount" sum="Total Amount"/>	            	                                                                                                                             
+	            </tree>
+	        </field>
+	    </record>		   
+		
+	    <record id="view_receivable_report_bag_tree" model="ir.ui.view">
+	        <field eval="1" name="priority"/>
+	        <field name="name">receivable.report.bag.tree</field>
+	        <field name="model">receivable.report.bag</field>
+	        <field name="arch" type="xml">
+	            <tree string="Receivable Report" create="false">	            	
+	                <field name="description" />	            	
+	            	<field name="date" />	            	 
+            	    <field name="category" />
+	            	<field name="amount" sum="Total Amount"/>	            	                                                                                                                             
+	            </tree>
+	        </field>
+	    </record>	
+	    
+	    <record id="view_payable_report_bag_tree" model="ir.ui.view">
+	        <field eval="1" name="priority"/>
+	        <field name="name">payable.report.bag.tree</field>
+	        <field name="model">payable.report.bag</field>
+	        <field name="arch" type="xml">
+	            <tree string="Payable Report" create="false">
+	                <field name="description" />	            	
+	            	<field name="date" />	    	            	
+	            	<field name="amount" sum="Total Amount"/>
+	            	<field name="status" />	            		            	                                                                                                                            
+	            </tree>
+	        </field>
+	    </record>	
+	    
+	    <record id="view_cash_report_bag_search" model="ir.ui.view">
+	        <field name="name">cash.report.bag.search</field>
+	        <field name="model">cash.report.bag</field>
+	        <field name="arch" type="xml">
+	            <search string="Cash Analysis">                                
+	                <group expand="1" string="Group By...">                    
+	                    <filter string="Type" name="type" icon="terp-personal" context="{'group_by':'type'}"/>
+	                    <filter string="Date" name="date" icon="terp-go-month" domain="[]" context="{'group_by':'date'}"/>                    
+	                </group>
+	            </search>
+	        </field>
+	    </record>
+	    
+   	    <record id="view_receivable_report_bag_search" model="ir.ui.view">
+	        <field name="name">receivable.report.bag.search</field>
+	        <field name="model">receivable.report.bag</field>
+	        <field name="arch" type="xml">
+	            <search string="Receivable Analysis">                                
+	                <group expand="1" string="Group By...">                    
+	                    <filter string="Date" name="date" icon="terp-go-month" domain="[]" context="{'group_by':'date'}"/>                    
+	                </group>
+	            </search>
+	        </field>
+	    </record>
+	    
+    	<record id="view_payable_report_bag_search" model="ir.ui.view">
+	        <field name="name">payable.report.bag.search</field>
+	        <field name="model">payable.report.bag</field>
+	        <field name="arch" type="xml">
+	            <search string="Payable Analysis">                                
+	                <group expand="1" string="Group By...">                    
+	                    <filter string="Date" name="date" icon="terp-go-month" domain="[]" context="{'group_by':'date'}"/>                    
+	                    <filter string="Status" name="status" icon="terp-personal" domain="[]" context="{'group_by':'status'}"/>
+	                    <filter string="Customer" name="customer" icon="terp-personal" domain="[]" context="{'group_by':'customer_id'}"/>
+	                </group>
+	            </search>
+	        </field>
+	    </record>	    	    
+	    
+		<record id="action_cash_report_analysis" model="ir.actions.act_window">
+	        <field name="name">Cash Report</field>	        
+	        <field name="res_model">cash.report.bag</field>
+	        <field name="view_type">form</field>
+	        <field name="view_mode">tree</field>        	       
+	        <field name="search_view_id" ref="view_cash_report_bag_search"/>                	       
+        	<field name="view_id" ref="view_cash_report_bag_tree"/>        	
+        	<field name="context">{"search_default_type":1,"search_default_date":1}</field>	               
+	    </record>
+	    
+		<record id="action_payable_report_analysis" model="ir.actions.act_window">
+	        <field name="name">Payable Report</field>	        
+	        <field name="res_model">payable.report.bag</field>
+	        <field name="view_type">form</field>
+	        <field name="view_mode">tree</field>        	 
+	        <field name="search_view_id" ref="view_payable_report_bag_search"/>          	        
+        	<field name="view_id" ref="view_payable_report_bag_tree"/>
+        	<field name="context">{"search_default_customer":1}</field>        	        	       
+	    </record>
+	    
+		<record id="action_receivable_report_analysis" model="ir.actions.act_window">
+	        <field name="name">Receivable Report</field>	        
+	        <field name="res_model">receivable.report.bag</field>
+	        <field name="view_type">form</field>
+	        <field name="view_mode">tree</field>        	       	            
+	        <field name="search_view_id" ref="view_receivable_report_bag_search"/>                	      
+        	<field name="view_id" ref="view_receivable_report_bag_tree"/>
+        	<field name="context">{"search_default_date":1}</field>        	        		              
+	    </record>
+	    
+		<menuitem id="section_menu_report" parent="menu_bag" name="Reports"/>
+	    	<menuitem action="action_cash_report_analysis" id="menu_cash_report_bag" parent="section_menu_report"/>
+	    	<menuitem action="action_receivable_report_analysis" id="menu_receivable_report_bag" parent="section_menu_report"/>
+	    	<menuitem action="action_payable_report_analysis" id="menu_payable_report_bag" parent="section_menu_report"/>
+	    	       
+	</data>
+</openerp>
