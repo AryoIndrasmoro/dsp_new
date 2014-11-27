@@ -509,7 +509,6 @@ class sale_order_line(osv.osv):
         return {'value': result, 'domain': domain, 'warning': warning}
     
     def onchange_product_dsp_id(self, cr, uid, ids, product_dsp_id, product_uom_qty, sale_type, price_list, partner_id, context=None):
-                                                                                                            
         price_unit = 0.0
         discount = 0.0        
         stock_default = 0
@@ -533,7 +532,7 @@ class sale_order_line(osv.osv):
         
         products = self.pool.get('product.product').browse(cr, uid, product_dsp_id, context=None)
         country = products.country_id.name                
-                                        
+        
         outlet_disc_id = self.pool.get('country.discount').search(cr, uid, [('country_id', '=', country)], context=None)
         print "aaaaaaaaa", outlet_disc_id
         if outlet_disc_id:
@@ -544,26 +543,33 @@ class sale_order_line(osv.osv):
                 
         if sale_type == 'Consignment':
             move_line = False
-            discount = outlet_disc_obj[0].discount - partner_id.consignment_discount            
-            stock_search  = self.pool.get('stock.picking').search(cr, uid, [('type','=','internal'),('partner_id', '=', partner_id.id)], context=None)                    
+            products = self.pool.get('product.product').browse(cr, uid, product_dsp_id, context=None)
+            product = self.pool.get('product.template').browse(cr, uid, product_dsp_id, context=None)
+            outlet_disc_id = self.pool.get('country.discount').search(cr, uid, [('country_id', '=', country)], context=None)
+            if outlet_disc_id:
+                outlet_disc_obj = self.pool.get('country.discount').browse(cr, uid, outlet_disc_id, context=None)
+                if outlet_disc_obj:
+                    discount = outlet_disc_obj[0].discount - partner_id.consignment_discount            
+            stock_search  = self.pool.get('stock.picking').search(cr, uid, [('type','=','internal'),('partner_id', '=', partner_id.id),('product_id','=',product.id)], context=None)                    
             min_value = 100000000
             if stock_search:
                 for stock in stock_search:            
                     if stock < min_value:
                         min_value = stock                                        
                 stock_default = min_value
-                move_line = self.pool.get('stock.picking').browse(cr, uid, stock_default, context=context).move_lines
-                            
-            products = self.pool.get('product.product').browse(cr, uid, product_dsp_id, context=None)
-            product = self.pool.get('product.template').browse(cr, uid, product_dsp_id, context=None)            
-            
-            if move_line:
-                for line in move_line:
-                    if line.name == product.name:
-                        price_unit = line.price_unit_view                                        
-                    else:
-                        raise osv.except_osv(_('Warning Confirmation !'), _('This Internal moves has no line contains the product!"'))
-                        price_unit = 0                                                                            
+                #move_line = self.pool.get('stock.picking').browse(cr, uid, stock_default, context=context).move_lines
+            else:
+                raise osv.except_osv(('Warning Confirmation !'), ('This Outlet has no consignment of this product!"'))
+                                
+            #===================================================================
+            # if move_line:
+            #     for line in move_line:
+            #         if line.name == product.name:
+            #             price_unit = line.price_unit_view                                        
+            #         else:
+            #             raise osv.except_osv(_('Warning Confirmation !'), ('This Internal moves has no line contains the product!"'))
+            #             price_unit = 0                                                                            
+            #===================================================================
         
         else:                                                                                         
             if sale_type == 'FOC':
